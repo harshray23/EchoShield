@@ -61,7 +61,7 @@ export default function AuthPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="flex items-center gap-2 mb-4">
         <FireboltIcon className="h-8 w-8 text-accent" />
-        <h1 className="text-2xl font-bold">FireBase Explorer</h1>
+        <h1 className="text-2xl font-bold">FireBase Explorer </h1>
       </div>
       <Tabs defaultValue="login" className="w-full max-w-sm">
         <TabsList className="grid w-full grid-cols-2">
@@ -87,7 +87,7 @@ export default function AuthPage() {
                   <FormField control={loginForm.control} name="password" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password</FormLabel>
-                      <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
+                      <FormControl><Input type="password" placeholder="Enter your password" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -130,7 +130,7 @@ export default function AuthPage() {
                     </FormItem>
                   )} />
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating Account..." : "Create Account"}
+                    {isSubmitting ? "Signing Up..." : "Sign Up"}
                   </Button>
                 </form>
               </Form>
