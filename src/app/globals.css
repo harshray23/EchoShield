@@ -7,6 +7,14 @@ body {
   background-image: linear-gradient(to right, #378F99, #0054A6);
 }
 
+.btn-gradient {
+  background-image: linear-gradient(to right, #378F99, #0054A6);
+  border: none;
+}
+.btn-gradient:hover {
+  background-image: linear-gradient(to right, #2d7a85, #00438a);
+}
+
 @layer base {
   :root {
     --background: 205 100% 12%;

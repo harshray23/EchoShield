@@ -91,7 +91,7 @@ export default function AuthPage() {
                       <FormMessage />
                     </FormItem>
                   )} />
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full btn-gradient" disabled={isSubmitting}>
                     {isSubmitting ? "Signing In..." : "Sign In"}
                   </Button>
                 </form>
@@ -129,7 +129,7 @@ export default function AuthPage() {
                       <FormMessage />
                     </FormItem>
                   )} />
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full btn-gradient" disabled={isSubmitting}>
                     {isSubmitting ? "Signing Up..." : "Sign Up"}
                   </Button>
                 </form>
