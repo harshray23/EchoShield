@@ -8,11 +8,10 @@ service cloud.firestore {
     }
 
     // Forensic Record Isolation: Users can only access their own analysis history
-    // We use a unified 'read' rule to cover both 'get' and 'list' operations.
-    // For 'list' operations, Firestore enforces that the query must filter by userId.
     match /analyses/{analysisId} {
-      // Ownership check for reading forensic data
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Explicitly separate get and list for query optimization
+      allow get: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow list: if request.auth != null && resource.data.userId == request.auth.uid;
       
       // Allow creation only if the authenticated user is the owner of the record
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
@@ -24,6 +23,6 @@ service cloud.firestore {
       allow update: if false;
     }
     
-    // Deployment trigger for forensic listing fix: v6_unified_read_policy
+    // Deployment trigger for forensic listing fix: v9_honest_error_reporting
   }
 }

@@ -51,13 +51,19 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           path = 'analyses';
         }
         
-        const permissionError = new FirestorePermissionError({
-          path,
-          operation: 'list',
-        } satisfies SecurityRuleContext);
-        
-        // Emit the error for the global listener (FirebaseErrorListener)
-        errorEmitter.emit('permission-error', permissionError);
+        // Only emit the specialized permission error if the code matches
+        if (serverError.code === 'permission-denied') {
+          const permissionError = new FirestorePermissionError({
+            path,
+            operation: 'list',
+          } satisfies SecurityRuleContext);
+          
+          // Emit the error for the global listener (FirebaseErrorListener)
+          errorEmitter.emit('permission-error', permissionError);
+        } else {
+          // Log non-permission errors (like missing indices) for developer visibility
+          console.error(`Firestore ${serverError.code}: ${serverError.message}`);
+        }
         
         setError(serverError);
         setLoading(false);
