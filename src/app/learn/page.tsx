@@ -197,8 +197,8 @@ export default function LearnPage() {
             </div>
           ) : (
             <div className="p-12 text-center">
-              <DialogTitle className="sr-only">Loading Module</DialogTitle>
-              <DialogDescription className="sr-only">Forensic defense protocols are being initialized.</DialogDescription>
+              <DialogTitle className="sr-only">Forensic Shield Loading</DialogTitle>
+              <DialogDescription className="sr-only">Initializing academy protocols for real-time education.</DialogDescription>
               < BookOpen className="h-12 w-12 text-primary animate-pulse mx-auto" />
             </div>
           )}
@@ -208,9 +208,9 @@ export default function LearnPage() {
       {/* Simulator Dialog */}
       <Dialog open={isSimulatorOpen} onOpenChange={setIsSimulatorOpen}>
         <DialogContent className="max-w-2xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden z-[101]">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Nova Scam Simulator</DialogTitle>
-            <DialogDescription>Experience and identify social engineering threats in a safe environment.</DialogDescription>
+          <DialogHeader className="p-8 bg-white/5 border-b border-white/5">
+            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Nova Scam Simulator</DialogTitle>
+            <DialogDescription className="text-[10px] font-black tracking-widest uppercase">Safe Forensic Training Environment</DialogDescription>
           </DialogHeader>
           <ScamSimulator scenario={currentScenario || "A suspicious text message from an unknown number claiming to be your bank."} />
         </DialogContent>
