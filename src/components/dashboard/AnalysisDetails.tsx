@@ -14,7 +14,7 @@ import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScamSimulator } from './ScamSimulator';
 
 interface AnalysisDetailsProps {
@@ -373,6 +373,10 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
 
       <Dialog open={showSim} onOpenChange={setShowSim}>
         <DialogContent className="max-w-3xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Nova Security Training Simulation</DialogTitle>
+            <DialogDescription>Interactive forensic simulator for identify digital threats.</DialogDescription>
+          </DialogHeader>
           <ScamSimulator scenario={result.simulationScenario || result.scamType} />
         </DialogContent>
       </Dialog>

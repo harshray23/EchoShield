@@ -133,18 +133,18 @@ export default function LearnPage() {
         <DialogContent className="max-w-3xl glass-card rounded-[3rem] p-0 border-white/5 overflow-hidden">
           {activeModule && (
             <div className="flex flex-col">
-              <div className="p-8 bg-primary/10 border-b border-white/5">
-                <div className="flex items-center gap-4 mb-4">
+              <DialogHeader className="p-8 bg-primary/10 border-b border-white/5 space-y-4 text-left">
+                <div className="flex items-center gap-4">
                   <div className="p-3 bg-primary/20 rounded-2xl text-primary">{activeModule.icon}</div>
                   <div>
-                    <h2 className="text-3xl font-black tracking-tighter uppercase">{activeModule.title}</h2>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">{activeModule.difficulty} Defense Protocol</p>
+                    <DialogTitle className="text-3xl font-black tracking-tighter uppercase">{activeModule.title}</DialogTitle>
+                    <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70">{activeModule.difficulty} Defense Protocol</DialogDescription>
                   </div>
                 </div>
                 <p className="text-lg font-medium text-white/90 leading-relaxed italic">
                   "{activeModule.desc}"
                 </p>
-              </div>
+              </DialogHeader>
               
               <div className="p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -191,6 +191,10 @@ export default function LearnPage() {
       {/* Simulator Dialog */}
       <Dialog open={isSimulatorOpen} onOpenChange={setIsSimulatorOpen}>
         <DialogContent className="max-w-2xl glass-card rounded-[3rem] p-0 border-white/5 overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Nova Scam Simulator</DialogTitle>
+            <DialogDescription>Experience and identify social engineering threats in a safe environment.</DialogDescription>
+          </DialogHeader>
           <ScamSimulator scenario={activeModule?.scenario || "A suspicious text message from an unknown number claiming to be your bank."} />
         </DialogContent>
       </Dialog>
