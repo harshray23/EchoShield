@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,9 +36,11 @@ export default function AuthPage() {
   const auth = useAuth();
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
+  
+  // Ref to prevent multiple toast triggers
+  const hasHandledRedirect = useRef(false);
 
   const handleAuthError = useCallback((e: any) => {
-    console.error("Auth Error:", e);
     if (e.code === 'auth/unauthorized-domain') {
       const domain = typeof window !== 'undefined' ? window.location.hostname : '';
       setDomainError(domain);
@@ -63,9 +65,9 @@ export default function AuthPage() {
     }, { merge: true });
   }, []);
 
-  // Handle Auth Redirect Result
+  // Simplified Redirect Handling Effect
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || hasHandledRedirect.current) return;
 
     if (user) {
       router.push('/dashboard');
@@ -75,14 +77,13 @@ export default function AuthPage() {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result?.user) {
+          hasHandledRedirect.current = true;
           await createUserProfile(result.user.uid, result.user.email || '');
           toast({ title: "Identity Verified", description: "Access granted via Google." });
         }
       })
-      .catch((e) => {
-        handleAuthError(e);
-      });
-  }, [user, authLoading, router, auth, toast, handleAuthError, createUserProfile]);
+      .catch((e) => handleAuthError(e));
+  }, [user, authLoading, auth, router, toast, handleAuthError, createUserProfile]);
 
   const form = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
@@ -94,10 +95,8 @@ export default function AuthPage() {
     setDomainError(null);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      toast({ title: "Identity Verified", description: "Access granted." });
     } catch (e: any) {
       handleAuthError(e);
-    } finally {
       setLoading(false);
     }
   };
@@ -108,10 +107,8 @@ export default function AuthPage() {
     try {
       const credential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       await createUserProfile(credential.user.uid, values.email);
-      toast({ title: "Identity Registered", description: "Your digital shield is now active." });
     } catch (e: any) {
       handleAuthError(e);
-    } finally {
       setLoading(false);
     }
   };
@@ -120,7 +117,6 @@ export default function AuthPage() {
     setDomainError(null);
     try {
       const provider = new GoogleAuthProvider();
-      // Using Redirect for better compatibility in workstation/iframe environments
       await signInWithRedirect(auth, provider);
     } catch (e: any) {
       handleAuthError(e);
@@ -132,10 +128,8 @@ export default function AuthPage() {
     setDomainError(null);
     try {
       await signInAnonymously(auth);
-      toast({ title: "Guest Access Enabled", description: "Limited persistence mode active." });
     } catch (e: any) {
       handleAuthError(e);
-    } finally {
       setLoading(false);
     }
   };
@@ -167,11 +161,11 @@ export default function AuthPage() {
             <AlertTitle className="font-black uppercase tracking-widest text-[10px]">Domain Authorization Required</AlertTitle>
             <AlertDescription className="space-y-3 pt-2">
               <p className="text-xs font-medium leading-relaxed">
-                To enable Google login, you must add <code className="bg-white/10 px-1 rounded">{domainError}</code> to your Authorized Domains in the Firebase Console.
+                Add <code className="bg-white/10 px-1 rounded">{domainError}</code> to your Authorized Domains in the Firebase Console.
               </p>
               <Button size="sm" variant="destructive" className="w-full rounded-xl h-9 px-4 font-bold text-[10px] uppercase tracking-widest" asChild>
                 <a href={`https://console.firebase.google.com/project/firebase-explorer-3mnk1/authentication/settings`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-3 w-3" /> Authorize Domain
+                  <ExternalLink className="mr-2 h-3 w-3" /> Fix Auth Domains
                 </a>
               </Button>
             </AlertDescription>
@@ -204,7 +198,7 @@ export default function AuthPage() {
                       </FormItem>
                     )} />
                     <Button type="submit" className="w-full h-12 rounded-xl btn-gradient cyber-glow" disabled={loading}>
-                      {loading ? 'Processing...' : 'ESTABLISH LINK'}
+                      {loading ? 'Establishing Link...' : 'ESTABLISH LINK'}
                     </Button>
                   </form>
                 </Form>

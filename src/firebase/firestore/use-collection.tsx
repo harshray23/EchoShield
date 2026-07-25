@@ -13,7 +13,6 @@ import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
 
 /**
  * Hook to subscribe to a Firestore collection query.
- * @param query The Firestore query to listen to.
  */
 export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = useState<T[] | null>(null);
@@ -47,18 +46,13 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
             path = (query as any)._query?.path?.toString() || 'analyses';
           } catch (e) {}
 
-          const permissionError = new FirestorePermissionError({
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
             path,
             operation: 'list',
-          } satisfies SecurityRuleContext);
-          
-          errorEmitter.emit('permission-error', permissionError);
-        } else if (serverError.code === 'failed-precondition') {
-          // Log missing index warning as a console warning, not an error
-          console.warn(`Firestore Missing Index: ${serverError.message}`);
+          } satisfies SecurityRuleContext));
         } else {
-          // Log other errors quietly to avoid red-screen loops
-          console.warn(`Firestore Error (${serverError.code}): ${serverError.message}`);
+          // Log other errors as warnings to avoid the full-screen Red Screen crash
+          console.warn(`Firestore Warning (${serverError.code}): ${serverError.message}`);
         }
         
         setError(serverError);

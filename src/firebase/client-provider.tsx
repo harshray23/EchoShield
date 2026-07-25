@@ -6,7 +6,7 @@ import { FirebaseProvider } from './provider';
 
 /**
  * Client-side Firebase Provider.
- * Breaks circular dependencies by avoiding the barrel file during initialization.
+ * Directly initializes services to avoid circular dependency via the index barrel file.
  */
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
