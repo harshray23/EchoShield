@@ -192,7 +192,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
               </Button>
             </div>
           )}
-        </div>
+        </CardContent>
       </Card>
       <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground opacity-50">
         <Brain className="h-3 w-3" /> Nova Security Training Environment

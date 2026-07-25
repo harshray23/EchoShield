@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -163,6 +164,7 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
         </Card>
       </motion.div>
 
+      {/* Forensic Intelligence Panels */}
       <AnimatePresence>
         {!showGrandmaMode && (
           <motion.div 
@@ -171,7 +173,7 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
             exit={{ opacity: 0, y: -20 }}
             className="grid grid-cols-1 lg:grid-cols-3 gap-10"
           >
-            {/* SCAM DNA CARD - FUTURISTIC FINGERPRINT STYLE */}
+            {/* SCAM DNA CARD */}
             <motion.div variants={itemVariants}>
               <Card className="glass-card border-white/5 rounded-[3rem] p-10 space-y-10 relative overflow-hidden group h-full">
                 <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
@@ -293,72 +295,6 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
         )}
       </AnimatePresence>
 
-      {/* ATTACK PATH VISUALIZATION */}
-      {!showGrandmaMode && (
-        <motion.div variants={itemVariants}>
-          <Card className="glass-card border-white/5 rounded-[3rem] p-12 overflow-hidden shadow-2xl">
-            <div className="flex items-center gap-4 mb-12">
-               <div className="p-4 bg-accent/10 rounded-[1.5rem] text-accent border border-accent/20"><Activity className="h-8 w-8" /></div>
-               <div>
-                 <h3 className="text-3xl font-black uppercase tracking-tighter">Story of the Scam</h3>
-                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Chronological Threat Vector Analysis</p>
-               </div>
-            </div>
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-12 relative px-10">
-              <div className="absolute top-[35px] left-[100px] right-[100px] h-[3px] bg-gradient-to-r from-accent/50 via-primary/50 to-transparent hidden md:block -z-10" />
-              {result.timeline.map((step, i) => (
-                <motion.div 
-                  key={i} 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.2 }}
-                  className="flex flex-col items-center text-center gap-6 flex-1 group"
-                >
-                  <div className={`h-16 w-16 rounded-[1.5rem] flex items-center justify-center border-2 transition-all shadow-2xl z-10 ${step.status === 'completed' ? 'bg-accent border-accent text-white scale-110 shadow-accent/40' : step.status === 'active' ? 'bg-primary border-primary animate-pulse text-white scale-125 shadow-primary/40' : 'bg-card border-white/10 text-muted-foreground group-hover:border-primary/50 group-hover:scale-105'}`}>
-                    {i === 0 && <Users className="h-7 w-7" />}
-                    {i === 1 && <MessageSquare className="h-7 w-7" />}
-                    {i === 2 && <ShieldAlert className="h-7 w-7" />}
-                    {i === 3 && <Wallet className="h-7 w-7" />}
-                    {i > 3 && <Skull className="h-7 w-7" />}
-                  </div>
-                  <div className="space-y-3">
-                    <p className={`text-[12px] font-black uppercase tracking-[0.25em] ${step.status === 'completed' ? 'text-accent' : step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>{step.label}</p>
-                    <p className="text-[13px] text-muted-foreground/80 font-medium leading-relaxed max-w-[200px] group-hover:text-white transition-colors">{step.description}</p>
-                  </div>
-                  {i < result.timeline.length - 1 && (
-                    <div className="md:hidden h-12 w-0.5 bg-gradient-to-b from-primary/50 to-transparent" />
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* NUCLEAR PROTOCOL */}
-      {result.riskLevel === 'nuclear' && (
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }} 
-          animate={{ scale: 1, opacity: 1 }} 
-          className="p-12 bg-red-600/10 border-2 border-red-600 rounded-[3.5rem] flex flex-col md:flex-row items-center justify-between gap-12 shadow-[0_0_80px_rgba(255,0,0,0.4)] relative overflow-hidden"
-        >
-          <div className="scanline animate-[scan_1s_linear_infinite] opacity-50" />
-          <div className="space-y-4 text-center md:text-left relative z-10">
-            <h3 className="text-5xl font-black text-red-600 uppercase tracking-tighter leading-none">🚨 NUCLEAR THREAT DETECTED</h3>
-            <p className="text-xl font-bold text-white max-w-xl opacity-90">Nova identifies this as a high-velocity direct attack. Neutralization protocols must be executed immediately.</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto relative z-10">
-            <Button className="h-18 px-12 rounded-[1.5rem] bg-red-600 text-white font-black hover:bg-red-700 gap-4 text-xl shadow-2xl uppercase tracking-tighter hover:scale-105 transition-transform">
-              <ShieldX className="h-7 w-7" /> SHUT DOWN THREAT
-            </Button>
-            <Button variant="outline" className="h-18 px-10 rounded-[1.5rem] border-white/30 text-white font-black hover:bg-white/10 text-lg uppercase tracking-tighter">
-              <PhoneCall className="mr-3 h-6 w-6" /> EMERGENCY ALERT
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
       <motion.div 
         variants={itemVariants}
         className="flex flex-col sm:flex-row justify-center gap-8 pt-6"
@@ -372,7 +308,7 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
       </motion.div>
 
       <Dialog open={showSim} onOpenChange={setShowSim}>
-        <DialogContent className="max-w-3xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden">
+        <DialogContent className="max-w-3xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden z-[101]">
           <DialogHeader className="sr-only">
             <DialogTitle>Nova Security Training Simulation</DialogTitle>
             <DialogDescription>Interactive forensic simulator for identify digital threats.</DialogDescription>
@@ -380,15 +316,6 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
           <ScamSimulator scenario={result.simulationScenario || result.scamType} />
         </DialogContent>
       </Dialog>
-
-      <motion.p 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 }}
-        transition={{ delay: 2 }}
-        className="text-center text-[11px] font-black text-muted-foreground uppercase tracking-[0.8em] pb-16 pt-10"
-      >
-        "Scammers are already using AI. It's time people had AI on their side too."
-      </motion.p>
     </motion.div>
   );
 }

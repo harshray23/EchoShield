@@ -198,7 +198,7 @@ export default function LearnPage() {
           ) : (
             <div className="p-12 text-center">
               <DialogTitle className="sr-only">Loading Module</DialogTitle>
-              <DialogDescription className="sr-only">Please wait while the module defense protocols are initialized.</DialogDescription>
+              <DialogDescription className="sr-only">Forensic defense protocols are being initialized.</DialogDescription>
               < BookOpen className="h-12 w-12 text-primary animate-pulse mx-auto" />
             </div>
           )}
