@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -50,7 +49,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           path = 'analyses';
         }
         
-        // Only emit the specialized permission error if the code matches
+        // Only emit the specialized permission error if the code is permission-denied
         if (serverError.code === 'permission-denied') {
           const permissionError = new FirestorePermissionError({
             path,
@@ -58,9 +57,10 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           } satisfies SecurityRuleContext);
           
           errorEmitter.emit('permission-error', permissionError);
-        } else {
-          // Surfacing critical developer errors (like missing indices)
-          console.error(`Firestore ${serverError.code}: ${serverError.message}`);
+        } else if (serverError.code === 'failed-precondition') {
+          // Do not console.error here as it triggers the Next.js overlay.
+          // The error state is returned and handled by UI components.
+          console.warn('Firestore Index Required: See UI alert for creation link.');
         }
         
         setError(serverError);

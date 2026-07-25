@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Firestore, collection, doc, setDoc, serverTimestamp, increment } from 'firebase/firestore';
@@ -68,11 +67,13 @@ export class AnalysisService {
     // Using setDoc to ensure the document is created with the explicit userId
     setDoc(docRef, analysisData)
       .catch(async (err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: docRef.path,
-          operation: 'create',
-          requestResourceData: analysisData,
-        }));
+        if (err.code === 'permission-denied') {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'create',
+            requestResourceData: analysisData,
+          }));
+        }
       });
 
     // Phase 5: User Profile Progression (Atomic Update)
@@ -87,11 +88,13 @@ export class AnalysisService {
     // Using setDoc with merge:true ensures document existence without manual existence checks
     setDoc(userRef, userProfileUpdate, { merge: true })
       .catch((err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: userRef.path,
-          operation: 'update',
-          requestResourceData: userProfileUpdate,
-        }));
+        if (err.code === 'permission-denied') {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'update',
+            requestResourceData: userProfileUpdate,
+          }));
+        }
       });
 
     // Phase 6: Voice Enrichment for High-Risk Threats
