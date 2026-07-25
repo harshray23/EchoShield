@@ -10,7 +10,7 @@ import {
   FirestoreError,
 } from 'firebase/firestore';
 import { errorEmitter } from '../error-emitter';
-import { FirestorePermissionError } from '../errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
 
 /**
  * Hook to subscribe to a Firestore collection query.
@@ -41,12 +41,13 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setError(null);
       },
       async (serverError: FirestoreError) => {
-        // Extracting path safely for error context
+        // Safe path extraction for debugging context
         let path = 'analyses';
         try {
           // Attempt to extract the collection path from the query object for better debugging context
+          // This uses internal properties that may change between SDK versions, hence the try-catch
           const internalQuery = (query as any)._query || query;
-          path = internalQuery.path?.toString() || 'analyses';
+          path = internalQuery.path?.segments?.join('/') || internalQuery.path?.toString() || 'analyses';
         } catch (e) {
           path = 'analyses';
         }
@@ -54,7 +55,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         const permissionError = new FirestorePermissionError({
           path,
           operation: 'list',
-        });
+        } satisfies SecurityRuleContext);
         
         // Emit the error for the global listener (FirebaseErrorListener)
         // In development, this triggers the Next.js error overlay with rich context

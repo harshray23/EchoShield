@@ -9,11 +9,11 @@ service cloud.firestore {
 
     // Forensic Record Isolation: Users can only access their own analysis history
     match /analyses/{analysisId} {
-      // Optimized read rule: Covers both get (single doc) and list (queries)
-      // The (resource == null) condition allows existence checks for 'get' operations.
-      // For 'list' operations, the filter in the query (userId == request.auth.uid) 
-      // must match the rule's ownership check for the query to be permitted.
-      allow read: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      // Separated get and list operations to help the rules engine verify ownership-filtered queries
+      // The (resource == null) condition in 'get' allows for document existence checks.
+      // For 'list' operations, the query filter (userId == request.auth.uid) must match this rule.
+      allow get: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if request.auth != null && resource.data.userId == request.auth.uid;
       
       // Allow creation only if the authenticated user is the owner of the record
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
@@ -25,6 +25,6 @@ service cloud.firestore {
       allow update: if false;
     }
     
-    // Inert trigger for Security Rules deployment: security_patch_v17_read_auth_fix
+    // Deployment trigger for forensic listing fix: v2_explicit_read_split
   }
 }
