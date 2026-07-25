@@ -26,6 +26,6 @@ service cloud.firestore {
       allow update: if false;
     }
     
-    // Inert trigger for Security Rules deployment: security_patch_v11_explicit_list_auth_fix
+    // Inert trigger for Security Rules deployment: security_patch_v15_explicit_list_auth_fix
   }
 }

@@ -84,6 +84,7 @@ export class AnalysisService {
       userId: this.userId, // Ensure UID is present in user doc too
     };
 
+    // Using setDoc with merge:true ensures document existence without manual existence checks
     setDoc(userRef, userProfileUpdate, { merge: true })
       .catch((err) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
