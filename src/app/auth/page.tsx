@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -14,13 +13,15 @@ import {
   GoogleAuthProvider,
   signInAnonymously 
 } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Fingerprint, Google, Ghost, ShieldCheck } from 'lucide-react';
+import { Fingerprint, Ghost, ShieldCheck, AlertCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const authSchema = z.object({
   email: z.string().email('Access protocol requires valid email.'),
@@ -29,8 +30,10 @@ const authSchema = z.object({
 
 export default function AuthPage() {
   const [loading, setLoading] = useState(false);
+  const [domainError, setDomainError] = useState<string | null>(null);
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
 
@@ -40,18 +43,43 @@ export default function AuthPage() {
     }
   }, [user, authLoading, router]);
 
+  const createUserProfile = async (uid: string, email: string) => {
+    const userRef = doc(db, 'users', uid);
+    await setDoc(userRef, {
+      email,
+      safetyScore: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  };
+
   const form = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
     defaultValues: { email: '', password: '' },
   });
 
+  const handleAuthError = (e: any) => {
+    if (e.code === 'auth/unauthorized-domain') {
+      const domain = window.location.hostname;
+      setDomainError(domain);
+      toast({ 
+        variant: "destructive", 
+        title: "Domain Not Authorized", 
+        description: "Your security link requires domain authorization in the Firebase Console." 
+      });
+    } else {
+      toast({ variant: "destructive", title: "Authentication Failed", description: e.message });
+    }
+  };
+
   const onLogin = async (values: z.infer<typeof authSchema>) => {
     setLoading(true);
+    setDomainError(null);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({ title: "Identity Verified", description: "Access granted to the console." });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Access Denied", description: e.message });
+      handleAuthError(e);
     } finally {
       setLoading(false);
     }
@@ -59,32 +87,39 @@ export default function AuthPage() {
 
   const onSignup = async (values: z.infer<typeof authSchema>) => {
     setLoading(true);
+    setDomainError(null);
     try {
-      await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const credential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await createUserProfile(credential.user.uid, values.email);
       toast({ title: "Identity Registered", description: "Your digital shield is now active." });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Enrollment Failed", description: e.message });
+      handleAuthError(e);
     } finally {
       setLoading(false);
     }
   };
 
   const onGoogleLogin = async () => {
+    setDomainError(null);
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      const credential = await signInWithPopup(auth, new GoogleAuthProvider());
+      if (credential.user) {
+        await createUserProfile(credential.user.uid, credential.user.email || '');
+      }
       toast({ title: "Google Link Established" });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Link Failed", description: e.message });
+      handleAuthError(e);
     }
   };
 
   const onGuestLogin = async () => {
     setLoading(true);
+    setDomainError(null);
     try {
       await signInAnonymously(auth);
       toast({ title: "Guest Access Enabled", description: "Limited persistence mode active." });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Guest Entry Failed", description: e.message });
+      handleAuthError(e);
     } finally {
       setLoading(false);
     }
@@ -106,6 +141,23 @@ export default function AuthPage() {
           <h1 className="text-4xl font-black tracking-tight">Security Gateway</h1>
           <p className="text-muted-foreground font-medium">Authentication required to enter the console.</p>
         </div>
+
+        {domainError && (
+          <Alert variant="destructive" className="glass-card border-destructive/50 rounded-2xl bg-destructive/10">
+            <AlertCircle className="h-5 w-5" />
+            <AlertTitle className="font-black uppercase tracking-widest text-[10px]">Domain Authorization Required</AlertTitle>
+            <AlertDescription className="space-y-3 pt-2">
+              <p className="text-xs font-medium leading-relaxed">
+                To enable Google login, you must add <code className="bg-white/10 px-1 rounded">{domainError}</code> to your Authorized Domains in the Firebase Console.
+              </p>
+              <Button size="sm" variant="destructive" className="w-full rounded-xl h-9 px-4 font-bold text-[10px] uppercase tracking-widest" asChild>
+                <a href={`https://console.firebase.google.com/project/firebase-explorer-3mnk1/authentication/settings`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-2 h-3 w-3" /> Authorize Domain
+                </a>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 p-1 bg-white/5 rounded-2xl mb-8 h-12">
