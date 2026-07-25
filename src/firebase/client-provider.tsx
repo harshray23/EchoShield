@@ -6,12 +6,11 @@ import { FirebaseProvider } from './provider';
 
 /**
  * Client-side Firebase Provider.
- * Ensures Firebase services are initialized exactly once in the browser.
+ * Breaks circular dependencies by avoiding the barrel file during initialization.
  */
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  // useMemo ensures we don't re-initialize on every render, though getFirebaseApp is idempotent.
   const services = useMemo(() => {
     const app = getFirebaseApp();
     return {

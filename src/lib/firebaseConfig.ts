@@ -1,10 +1,9 @@
-// Import the functions you need from the SDKs you need
+// Consolidated Firebase configuration to match project settings
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   projectId: "firebase-explorer-3mnk1",
   appId: "1:322431168944:web:0ae9605fc842e1a1f96675",
@@ -14,7 +13,6 @@ const firebaseConfig = {
   messagingSenderId: "322431168944"
 };
 
-// Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);

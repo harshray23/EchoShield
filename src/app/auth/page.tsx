@@ -62,6 +62,7 @@ export default function AuthPage() {
     }, { merge: true });
   }, [db]);
 
+  // Handle redirect result and navigation
   useEffect(() => {
     if (authLoading) return;
 
@@ -154,7 +155,7 @@ export default function AuthPage() {
               <Fingerprint className="h-12 w-12 text-primary" />
             </div>
           </div>
-          <h1 className="text-4xl font-black tracking-tight">Security Gateway</h1>
+          <h1 className="text-4xl font-black tracking-tight text-white">Security Gateway</h1>
           <p className="text-muted-foreground font-medium">Authentication required to enter the console.</p>
         </div>
 

@@ -40,6 +40,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setError(null);
       },
       async (serverError: FirestoreError) => {
+        // Triage errors to avoid crashing development environment
         if (serverError.code === 'permission-denied') {
           let path = 'unknown';
           try {
@@ -53,8 +54,11 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           
           errorEmitter.emit('permission-error', permissionError);
         } else if (serverError.code === 'failed-precondition') {
-          // Log missing index warning as a warning, not a crash-inducing error
+          // Log missing index warning as a console warning, not an error
           console.warn(`Firestore Missing Index: ${serverError.message}`);
+        } else {
+          // Log other errors quietly to avoid red-screen loops
+          console.warn(`Firestore Error (${serverError.code}): ${serverError.message}`);
         }
         
         setError(serverError);
