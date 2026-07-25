@@ -10,12 +10,12 @@ import { firebaseConfig } from './config';
 /**
  * Client-side Firebase Provider.
  * Initializes Firebase services once on the client and provides them to the app.
+ * Direct imports used to prevent circular dependency with the barrel file.
  */
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const services = React.useMemo(() => {
-    // Ensure Firebase is initialized only once
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     return {
       firebaseApp: app,

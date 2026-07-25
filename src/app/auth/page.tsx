@@ -24,7 +24,7 @@ export default function AuthPage() {
   const [loading, setLoading] = React.useState(false);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [domainError, setDomainError] = React.useState<string | null>(null);
+  const [unauthorizedDomain, setUnauthorizedDomain] = React.useState<string | null>(null);
   
   const router = useRouter();
   const auth = useAuth();
@@ -32,16 +32,16 @@ export default function AuthPage() {
   const { toast } = useToast();
   const hasHandledRedirect = React.useRef(false);
 
-  // Auto-redirect if authenticated
+  // Stable navigation effect
   React.useEffect(() => {
     if (!authLoading && user) {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
 
-  // Handle redirect result with stable effect
+  // Handle redirect result with stable effect and constant dependency array
   React.useEffect(() => {
-    if (authLoading || hasHandledRedirect.current) return;
+    if (authLoading || hasHandledRedirect.current || !auth) return;
 
     const checkRedirect = async () => {
       try {
@@ -50,28 +50,30 @@ export default function AuthPage() {
           hasHandledRedirect.current = true;
           const db = getFirestore();
           const userRef = doc(db, 'users', result.user.uid);
+          
           await setDoc(userRef, {
             email: result.user.email || '',
+            name: result.user.displayName || 'Agent',
+            photo: result.user.photoURL || '',
             safetyScore: 0,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
             userId: result.user.uid
           }, { merge: true });
           
-          toast({ title: "Identity Verified", description: "Welcome back, Agent." });
           router.push('/dashboard');
         }
       } catch (e: any) {
         if (e.code === 'auth/unauthorized-domain') {
-          setDomainError(window.location.hostname);
+          setUnauthorizedDomain(window.location.hostname);
         } else {
-          console.warn("Auth redirect protocol:", e.message);
+          console.warn("Auth redirect error:", e.code, e.message);
         }
       }
     };
 
     checkRedirect();
-  }, [auth, authLoading, router, toast]);
+  }, [auth, authLoading, router]); // toast removed from deps to ensure stability
 
   const onEmailLogin = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +108,11 @@ export default function AuthPage() {
   const onGoogleLogin = React.useCallback(() => {
     const provider = new GoogleAuthProvider();
     signInWithRedirect(auth, provider).catch(e => {
-       toast({ variant: "destructive", title: "Protocol Error", description: e.message });
+       if (e.code === 'auth/unauthorized-domain') {
+         setUnauthorizedDomain(window.location.hostname);
+       } else {
+         toast({ variant: "destructive", title: "Protocol Error", description: e.message });
+       }
     });
   }, [auth, toast]);
 
@@ -139,17 +145,17 @@ export default function AuthPage() {
           <p className="text-muted-foreground font-medium">Authentication required to enter the console.</p>
         </div>
 
-        {domainError && (
-          <Alert variant="destructive" className="glass-card border-destructive/50 rounded-2xl bg-destructive/10">
+        {unauthorizedDomain && (
+          <Alert variant="destructive" className="glass-card border-destructive/50 rounded-2xl bg-destructive/10 animate-in fade-in slide-in-from-top-4 duration-500">
             <AlertCircle className="h-5 w-5" />
             <AlertTitle className="font-black uppercase tracking-widest text-[10px]">Domain Authorization Required</AlertTitle>
             <AlertDescription className="space-y-3 pt-2">
               <p className="text-xs font-medium leading-relaxed">
-                Add <code className="bg-white/10 px-1 rounded">{domainError}</code> to your Authorized Domains in the Firebase Console.
+                The domain <code className="bg-white/10 px-1 rounded">{unauthorizedDomain}</code> must be authorized in your Firebase Console to enable Google Login.
               </p>
               <Button size="sm" variant="destructive" className="w-full rounded-xl h-9 px-4 font-bold text-[10px] uppercase tracking-widest" asChild>
                 <a href={`https://console.firebase.google.com/project/firebase-explorer-3mnk1/authentication/settings`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-3 w-3" /> Authorize Domain
+                  <ExternalLink className="mr-2 h-3 w-3" /> Fix in Firebase Console
                 </a>
               </Button>
             </AlertDescription>

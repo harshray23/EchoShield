@@ -13,12 +13,14 @@ import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
 
 /**
  * Hook to subscribe to a Firestore collection query.
+ * Uses a constant effect dependency array to prevent React re-render loops.
  */
 export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = React.useState<T[] | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<FirestoreError | null>(null);
 
+  // Stable effect with query as the only dependency
   React.useEffect(() => {
     if (!query) {
       setLoading(false);
@@ -50,7 +52,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
             operation: 'list',
           } satisfies SecurityRuleContext));
         } else {
-          // Log non-permission errors (like missing indices) for developer visibility without crashing
+          // Log non-permission errors (like missing indices) as warnings to avoid development crashes
           console.warn(`Firestore ${serverError.code}: ${serverError.message}`);
         }
         
