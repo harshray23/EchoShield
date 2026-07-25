@@ -52,7 +52,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
             operation: 'list',
           } satisfies SecurityRuleContext));
         } else {
-          // Log non-permission errors (like missing indices) as warnings to avoid development crashes
+          // Log non-permission errors (like missing indices) as warnings to avoid development-time "Red Screen" crashes
           console.warn(`Firestore ${serverError.code}: ${serverError.message}`);
         }
         

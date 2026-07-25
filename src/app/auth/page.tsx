@@ -30,7 +30,7 @@ export default function AuthPage() {
   const auth = useAuth();
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
-  const hasHandledRedirect = React.useRef(false);
+  const hasCheckedRedirect = React.useRef(false);
 
   // Stable navigation effect
   React.useEffect(() => {
@@ -39,15 +39,15 @@ export default function AuthPage() {
     }
   }, [user, authLoading, router]);
 
-  // Handle redirect result with stable effect and constant dependency array
+  // Handle redirect result with stable effect
   React.useEffect(() => {
-    if (authLoading || hasHandledRedirect.current || !auth) return;
+    if (authLoading || hasCheckedRedirect.current || !auth) return;
 
     const checkRedirect = async () => {
+      hasCheckedRedirect.current = true;
       try {
         const result = await getRedirectResult(auth);
-        if (result?.user && !hasHandledRedirect.current) {
-          hasHandledRedirect.current = true;
+        if (result?.user) {
           const db = getFirestore();
           const userRef = doc(db, 'users', result.user.uid);
           
@@ -67,16 +67,17 @@ export default function AuthPage() {
         if (e.code === 'auth/unauthorized-domain') {
           setUnauthorizedDomain(window.location.hostname);
         } else {
-          console.warn("Auth redirect error:", e.code, e.message);
+          console.warn("Auth redirect result error:", e.code, e.message);
         }
       }
     };
 
     checkRedirect();
-  }, [auth, authLoading, router]); // toast removed from deps to ensure stability
+  }, [auth, authLoading, router]);
 
   const onEmailLogin = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) return;
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -88,6 +89,7 @@ export default function AuthPage() {
 
   const onEmailSignup = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) return;
     setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);

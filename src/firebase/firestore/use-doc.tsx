@@ -42,6 +42,7 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
           } satisfies SecurityRuleContext);
           errorEmitter.emit('permission-error', permissionError);
         } else {
+          // Log non-permission errors as warnings to avoid crashing during development
           console.warn(`Firestore Doc ${serverError.code}: ${serverError.message}`);
         }
         setError(serverError);
