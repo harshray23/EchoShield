@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -9,6 +10,7 @@ import { AnalysisService } from '@/services/analysis-service';
 import { TriageCenter } from '@/components/dashboard/TriageCenter';
 import { AnalysisDetails } from '@/components/dashboard/AnalysisDetails';
 import { AnalysisLoader } from '@/components/dashboard/AnalysisLoader';
+import { ScamMap } from '@/components/dashboard/ScamMap';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { analyzeTargetingPatterns, type TargetAnalysisOutput } from '@/ai/flows/target-analysis-flow';
 import { doc, collection, query, where, orderBy, limit } from 'firebase/firestore';
@@ -249,23 +251,30 @@ export default function DashboardPage() {
                   </motion.div>
                 )}
 
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="h-[400px] flex flex-col items-center justify-center glass-card rounded-[3rem] p-12 text-center border-white/5 relative overflow-hidden"
-                >
-                  <Globe className="absolute h-96 w-96 text-primary/5 -right-20 -bottom-20 rotate-12" />
-                  <div className="relative mb-8">
-                    <ShieldAlert className="h-24 w-24 text-white/5" />
-                    <motion.div animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 flex items-center justify-center">
-                      <Fingerprint className="h-12 w-12 text-primary" />
-                    </motion.div>
-                  </div>
-                  <h3 className="text-2xl font-bold uppercase tracking-tight">Nova is Listening</h3>
-                  <p className="text-muted-foreground max-w-sm mt-2 text-sm font-medium">
-                    Upload forensic evidence above to initiate the Nova Guardian Protocol.
-                  </p>
-                </motion.div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[500px]">
+                   <Card className="glass-card border-white/5 rounded-[3rem] p-8 overflow-hidden relative">
+                      <div className="absolute inset-0 bg-primary/5 opacity-50 blur-3xl" />
+                      <ScamMap />
+                   </Card>
+
+                   <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center glass-card rounded-[3rem] p-12 text-center border-white/5 relative overflow-hidden"
+                  >
+                    <Globe className="absolute h-96 w-96 text-primary/5 -right-20 -bottom-20 rotate-12" />
+                    <div className="relative mb-8">
+                      <ShieldAlert className="h-24 w-24 text-white/5" />
+                      <motion.div animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 flex items-center justify-center">
+                        <Fingerprint className="h-12 w-12 text-primary" />
+                      </motion.div>
+                    </div>
+                    <h3 className="text-2xl font-bold uppercase tracking-tight">Nova is Listening</h3>
+                    <p className="text-muted-foreground max-w-sm mt-2 text-sm font-medium">
+                      Upload forensic evidence above to initiate the Nova Guardian Protocol.
+                    </p>
+                  </motion.div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <Card className="glass-card border-white/5 rounded-[2.5rem] p-8">
@@ -275,10 +284,17 @@ export default function DashboardPage() {
                       </p>
                    </Card>
                    <Card className="glass-card border-white/5 rounded-[2.5rem] p-8 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-10"><Globe className="h-24 w-24" /></div>
-                      <h4 className="text-lg font-black uppercase tracking-tighter mb-4 text-accent">Scam-Free Map (Live)</h4>
-                      <div className="h-32 bg-white/5 rounded-2xl flex items-center justify-center">
-                         <p className="text-[10px] font-black tracking-[0.4em] uppercase text-muted-foreground/50">Forensic Map Loading...</p>
+                      <div className="absolute top-0 right-0 p-4 opacity-10"><Zap className="h-24 w-24 text-accent" /></div>
+                      <h4 className="text-lg font-black uppercase tracking-tighter mb-4 text-accent">Active Defense Protocol</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Real-time Phishing Detection Active</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Regional Geo-Triage Shield Enabled</span>
+                        </div>
                       </div>
                    </Card>
                 </div>

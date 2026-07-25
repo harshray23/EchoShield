@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Centralized prompt templates for EchoShield AI.
  */
@@ -35,4 +36,6 @@ Narrate the following security warning in a professional, protective, and firm t
 Address the user personally if their name is in the text.
 Language: {{{language}}}
 Warning Text: {{{text}}}
+
+Nova's Voice Profile: Professional, calm, empathetic, yet authoritative.
 `;
