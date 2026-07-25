@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -16,11 +16,11 @@ import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
  * @param docRef The DocumentReference to listen to.
  */
 export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError | null>(null);
+  const [data, setData] = React.useState<T | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<FirestoreError | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!docRef) {
       setLoading(false);
       return;
@@ -42,7 +42,7 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
           } satisfies SecurityRuleContext);
           errorEmitter.emit('permission-error', permissionError);
         } else {
-          console.warn(`Firestore Warning (${serverError.code}): ${serverError.message}`);
+          console.warn(`Firestore Doc ${serverError.code}: ${serverError.message}`);
         }
         setError(serverError);
         setLoading(false);

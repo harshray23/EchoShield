@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import {
   Query,
   onSnapshot,
@@ -15,11 +15,11 @@ import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
  * Hook to subscribe to a Firestore collection query.
  */
 export function useCollection<T = DocumentData>(query: Query<T> | null) {
-  const [data, setData] = useState<T[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError | null>(null);
+  const [data, setData] = React.useState<T[] | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<FirestoreError | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!query) {
       setLoading(false);
       setData(null);
@@ -39,7 +39,6 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setError(null);
       },
       async (serverError: FirestoreError) => {
-        // Triage errors to avoid crashing development environment
         if (serverError.code === 'permission-denied') {
           let path = 'unknown';
           try {
@@ -51,8 +50,8 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
             operation: 'list',
           } satisfies SecurityRuleContext));
         } else {
-          // Log other errors as warnings to avoid the full-screen Red Screen crash
-          console.warn(`Firestore Warning (${serverError.code}): ${serverError.message}`);
+          // Log non-permission errors (like missing indices) for developer visibility without crashing
+          console.warn(`Firestore ${serverError.code}: ${serverError.message}`);
         }
         
         setError(serverError);

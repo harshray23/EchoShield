@@ -1,4 +1,3 @@
-// Consolidated Firebase configuration to match project settings
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -9,7 +8,7 @@ const firebaseConfig = {
   appId: "1:322431168944:web:0ae9605fc842e1a1f96675",
   storageBucket: "firebase-explorer-3mnk1.firebasestorage.app",
   apiKey: "AIzaSyDWbmtKVoDzKfF823bfGXc7qHypjSB3WDg",
-  authDomain: "firebase-explorer-3mnk1.firebaseapp.com",
+  authDomain: "fir-explorer-3mnk1.firebaseapp.com",
   messagingSenderId: "322431168944"
 };
 
