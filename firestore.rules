@@ -8,9 +8,9 @@ service cloud.firestore {
     }
 
     // Forensic Record Isolation: Users can only access their own analysis history
-    // This rule allows 'list' operations only if the query is filtered by userId == auth.uid
     match /analyses/{analysisId} {
       // Allow read (get and list) if the document's userId matches the authenticated user
+      // Queries MUST include: where('userId', '==', auth.uid)
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       
       // Allow creation only if the authenticated user is the owner of the record
@@ -23,6 +23,6 @@ service cloud.firestore {
       allow update: if false;
     }
     
-    // Inert trigger for Security Rules deployment: forensic_v2_stable
+    // Inert trigger for Security Rules deployment: forensic_v4_stable_fix
   }
 }

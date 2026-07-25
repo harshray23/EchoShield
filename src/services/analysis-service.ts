@@ -65,6 +65,7 @@ export class AnalysisService {
     };
 
     // Phase 4: Persistence with Permission Error Handling
+    // Using setDoc to ensure the document is created with the explicit userId
     setDoc(docRef, analysisData).catch(async (err) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
@@ -76,9 +77,10 @@ export class AnalysisService {
     // Phase 5: User Profile Progression (Atomic Update)
     const userRef = doc(this.db, 'users', this.userId);
     setDoc(userRef, {
-      safetyScore: increment(analysis.safetyScoreEarned),
+      safetyScore: increment(analysis.safetyScoreEarned || 0),
       lastAnalysisAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      userId: this.userId, // Ensure UID is present in user doc too
     }, { merge: true }).catch((err) => {
       // Non-blocking update; errors are captured by the global listener if critical
     });
