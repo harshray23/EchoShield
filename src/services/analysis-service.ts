@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Firestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -18,7 +19,14 @@ export class AnalysisService {
     const analysisData: Omit<ScamAnalysis, 'id'> = {
       userId: this.userId,
       type: input.type,
-      ...analysis,
+      riskScore: analysis.riskScore,
+      riskLevel: analysis.riskLevel,
+      scamType: analysis.scamType,
+      confidence: analysis.confidence,
+      summary: analysis.summary,
+      redFlags: analysis.redFlags,
+      psychology: analysis.psychology,
+      recommendations: analysis.recommendations,
       timestamp: serverTimestamp(),
     };
 
@@ -33,8 +41,8 @@ export class AnalysisService {
 
     // 3. Generate Voice Warning if high risk
     let warningAudio: string | undefined;
-    if (analysis.score > 40) {
-      warningAudio = await generateVoiceWarning(analysis.verdict);
+    if (analysis.riskScore > 40) {
+      warningAudio = await generateVoiceWarning(analysis.scamType);
     }
 
     return { analysis, warningAudio };

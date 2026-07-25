@@ -1,21 +1,25 @@
+
 export type AnalysisType = 'text' | 'image' | 'voice';
 
 export interface ScamAnalysis {
   id?: string;
   userId: string;
   type: AnalysisType;
-  score: number;
+  riskScore: number;
+  riskLevel: 'secure' | 'suspicious' | 'malicious';
+  scamType: string;
   confidence: number;
-  verdict: string;
-  explanation: string;
+  summary: string;
   redFlags: string[];
-  advice: string;
-  checklist: string[];
+  psychology: string;
+  recommendations: string[];
   timestamp: any; // Firestore Timestamp
   metadata?: Record<string, any>;
 }
 
-export interface UserSetting {
-  notificationsEnabled: boolean;
-  theme: 'dark' | 'light';
+export interface UserProfile {
+  email: string;
+  name?: string;
+  photo?: string;
+  createdAt: any;
 }

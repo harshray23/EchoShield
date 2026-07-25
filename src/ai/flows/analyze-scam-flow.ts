@@ -1,3 +1,4 @@
+
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -10,13 +11,14 @@ const AnalyzeScamInputSchema = z.object({
 });
 
 const AnalyzeScamOutputSchema = z.object({
-  score: z.number().describe('Risk score 0-100'),
-  confidence: z.number(),
-  verdict: z.string().describe('Short clear verdict, e.g. "Gift Card Scam Attempt"'),
-  explanation: z.string().describe('Educational explanation of WHY this is a scam.'),
-  redFlags: z.array(z.string()).describe('List of specific manipulation tactics identified.'),
-  advice: z.string().describe('Clear next steps for the user.'),
-  checklist: z.array(z.string()).describe('Mandatory safety steps.'),
+  riskScore: z.number().describe('Risk score 0-100'),
+  riskLevel: z.enum(['secure', 'suspicious', 'malicious']),
+  scamType: z.string().describe('Short clear identifying name of the scam, e.g. "Gift Card Scam Attempt"'),
+  confidence: z.number().describe('Certainty score 0-1'),
+  summary: z.string().describe('A concise summary of the content and the finding.'),
+  psychology: z.string().describe('Detailed educational explanation of WHY this is a threat and the manipulation tactics used.'),
+  redFlags: z.array(z.string()).describe('List of specific manipulation traits or red flags identified.'),
+  recommendations: z.array(z.string()).describe('Actionable safety steps for the user.'),
 });
 
 export type AnalyzeScamInput = z.infer<typeof AnalyzeScamInputSchema>;

@@ -1,46 +1,48 @@
 
 {
   "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User account information.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "photo": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "ScamAnalysis": {
       "title": "Scam Analysis",
-      "description": "Result of a scam detection analysis performed by the AI.",
+      "description": "Forensic result of a scam detection scan.",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
         "type": { "type": "string", "enum": ["screenshot", "voice", "text"] },
-        "score": { "type": "number", "description": "Scam risk score from 0 to 100" },
+        "riskScore": { "type": "number", "description": "Risk score from 0 to 100" },
+        "riskLevel": { "type": "string", "enum": ["secure", "suspicious", "malicious"] },
+        "scamType": { "type": "string" },
         "confidence": { "type": "number" },
-        "verdict": { "type": "string" },
-        "explanation": { "type": "string" },
+        "summary": { "type": "string" },
         "redFlags": { "type": "array", "items": { "type": "string" } },
-        "advice": { "type": "string" },
-        "checklist": { "type": "array", "items": { "type": "string" } },
-        "timestamp": { "type": "string", "format": "date-time" },
-        "metadata": { "type": "object" }
+        "psychology": { "type": "string" },
+        "recommendations": { "type": "array", "items": { "type": "string" } },
+        "timestamp": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "score", "verdict"]
-    },
-    "UserSetting": {
-      "title": "User Setting",
-      "description": "User specific application settings.",
-      "type": "object",
-      "properties": {
-        "notificationsEnabled": { "type": "boolean" },
-        "theme": { "type": "string" }
-      }
+      "required": ["userId", "riskScore", "riskLevel", "scamType"]
     }
   },
   "auth": {
     "providers": ["google.com", "password"]
   },
   "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile data."
+    },
     "/analyses/{analysisId}": {
       "schema": "ScamAnalysis",
-      "description": "A collection of scam analyses indexed by ID."
-    },
-    "/users/{userId}/settings/general": {
-      "schema": "UserSetting",
-      "description": "General settings for a specific user."
+      "description": "A collection of scam analyses."
     }
   }
 }
