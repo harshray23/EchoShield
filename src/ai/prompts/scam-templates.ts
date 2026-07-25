@@ -20,6 +20,11 @@ BE CRITICAL:
 - If the risk is low, explain why it appears safe but advise caution.
 - If the risk is high, name the specific scam type (e.g., "The Pig Butchering Scam", "Grandparent Scam").
 - Always provide a clear, actionable checklist.
+
+STORYTELLING DIRECTIVE:
+Generate a "Scam Progression Timeline". This should reflect the lifecycle of this specific threat.
+Common steps to map: Message Received -> Link Opened -> OTP Requested -> Money Requested -> Risk Detected.
+Adjust the steps based on the actual content provided. Use the following icon types: message, link, otp, money, risk.
 `;
 
 export const SCAM_ANALYSIS_PROMPT = `
@@ -53,6 +58,8 @@ Forensically examine this document (PDF/DOCX/TXT) for phishing, fraudulent terms
 
 Educational Directive:
 Explain WHY this is a threat. Use terms like "Sense of Urgency," "Trust Building," or "Credential Harvesting."
+
+Output a chronological timeline of 4-6 steps detailing the scam progression from inception to the final detected risk.
 `;
 
 export const VOICE_WARNING_PROMPT = `

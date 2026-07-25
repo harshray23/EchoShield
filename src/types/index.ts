@@ -1,5 +1,12 @@
 export type AnalysisType = 'text' | 'image' | 'voice' | 'document';
 
+export interface TimelineStep {
+  label: string;
+  description: string;
+  status: 'pending' | 'active' | 'completed';
+  iconType: 'message' | 'link' | 'otp' | 'money' | 'risk';
+}
+
 export interface ScamAnalysis {
   id?: string;
   userId: string;
@@ -12,6 +19,7 @@ export interface ScamAnalysis {
   redFlags: string[];
   psychology: string;
   recommendations: string[];
+  timeline: TimelineStep[];
   timestamp: any; // Firestore Timestamp
   metadata?: Record<string, any>;
 }

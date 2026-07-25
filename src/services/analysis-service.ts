@@ -42,6 +42,7 @@ export class AnalysisService {
       redFlags: analysis.redFlags,
       psychology: analysis.psychology,
       recommendations: analysis.recommendations,
+      timeline: analysis.timeline,
       timestamp: serverTimestamp(),
       metadata: ocrText ? { ocrText } : undefined,
     };

@@ -19,6 +19,12 @@ const AnalyzeScamOutputSchema = z.object({
   psychology: z.string().describe('Detailed educational explanation of WHY this is a threat and the manipulation tactics used.'),
   redFlags: z.array(z.string()).describe('List of specific manipulation traits or red flags identified.'),
   recommendations: z.array(z.string()).describe('Actionable safety steps for the user.'),
+  timeline: z.array(z.object({
+    label: z.string(),
+    description: z.string(),
+    status: z.enum(['pending', 'active', 'completed']),
+    iconType: z.enum(['message', 'link', 'otp', 'money', 'risk']),
+  })).describe('A chronological sequence of steps showing how this scam typically progresses or has progressed in this specific case.'),
 });
 
 export type AnalyzeScamInput = z.infer<typeof AnalyzeScamInputSchema>;

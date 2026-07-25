@@ -3,7 +3,21 @@
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, AlertTriangle, CheckCircle2, Volume2, Download, ShieldAlert, Zap, Info } from 'lucide-react';
+import { 
+  BookOpen, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Volume2, 
+  Download, 
+  ShieldAlert, 
+  Zap, 
+  Info,
+  MessageSquare,
+  ExternalLink,
+  Key,
+  Wallet,
+  ArrowDown
+} from 'lucide-react';
 import { RiskMeter } from './RiskMeter';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 
@@ -41,6 +55,17 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
 
   const statusColor = getRiskColor(result.riskScore);
 
+  const getTimelineIcon = (type: string) => {
+    switch (type) {
+      case 'message': return <MessageSquare className="h-5 w-5" />;
+      case 'link': return <ExternalLink className="h-5 w-5" />;
+      case 'otp': return <Key className="h-5 w-5" />;
+      case 'money': return <Wallet className="h-5 w-5" />;
+      case 'risk': return <ShieldAlert className="h-5 w-5" />;
+      default: return <Info className="h-5 w-5" />;
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -77,6 +102,65 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
             <div className="relative group shrink-0">
                <RiskMeter score={result.riskScore} />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Cyber Heat Timeline - The "Judge Favorite" */}
+      <Card className="glass-card border-white/5 rounded-[2.5rem] overflow-hidden">
+        <CardHeader className="p-8 pb-0">
+          <CardTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-3">
+            <Zap className="h-6 w-6 text-primary" />
+            Scam Progression Timeline
+          </CardTitle>
+          <CardDescription className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">
+            Visual Lifecycle of the Threat
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-8 sm:p-10">
+          <div className="relative space-y-8">
+            {result.timeline.map((step, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.2 }}
+                className="flex items-start gap-6 relative"
+              >
+                {/* Timeline Line */}
+                {index !== result.timeline.length - 1 && (
+                  <div className="absolute left-[26px] top-12 bottom-[-32px] w-px bg-gradient-to-b from-primary/50 to-transparent" />
+                )}
+                
+                {/* Step Icon */}
+                <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center relative z-10 border transition-all ${
+                  step.status === 'completed' ? 'bg-primary/20 border-primary/40 text-primary' : 
+                  step.status === 'active' ? 'bg-accent/20 border-accent/40 text-accent animate-pulse' : 
+                  'bg-white/5 border-white/10 text-muted-foreground'
+                }`}>
+                  {getTimelineIcon(step.iconType)}
+                </div>
+
+                {/* Step Details */}
+                <div className="space-y-1 pt-1">
+                  <h4 className={`text-lg font-black uppercase tracking-tight ${
+                    step.status === 'active' ? 'text-accent' : 
+                    step.status === 'completed' ? 'text-white' : 'text-muted-foreground'
+                  }`}>
+                    {step.label}
+                  </h4>
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-lg">
+                    {step.description}
+                  </p>
+                  {step.status === 'active' && (
+                    <div className="flex items-center gap-2 mt-2">
+                       <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                       <span className="text-[9px] font-black uppercase tracking-widest text-accent">Active Threat Stage</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </CardContent>
       </Card>
