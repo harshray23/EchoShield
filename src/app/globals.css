@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 6%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 199 89% 48%;
+    --background: 230 50% 3%;
+    --foreground: 210 40% 98%;
+    --card: 230 45% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 230 50% 3%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 100% 50%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 222 47% 11%;
+    --secondary: 215 25% 27%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215.4 16.3% 56.9%;
-    --accent: 142 71% 45%;
+    --muted: 215 25% 15%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 142 76% 55%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 224.3 76.3% 48%;
-    --radius: 1rem;
+    --border: 215 25% 15%;
+    --input: 215 25% 15%;
+    --ring: 199 100% 50%;
+    --radius: 1.5rem;
   }
 }
 
@@ -34,23 +34,34 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
     background-image: 
-      radial-gradient(at 0% 0%, hsla(199, 89%, 48%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(142, 71%, 45%, 0.1) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, hsla(199, 100%, 50%, 0.12) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(142, 76%, 55%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, hsla(230, 50%, 10%, 1) 0px, transparent 100%);
   }
 }
 
 .glass-card {
-  @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @apply bg-card/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)];
 }
 
 .cyber-glow {
-  box-shadow: 0 0 20px hsla(199, 89%, 48%, 0.4);
+  box-shadow: 0 0 30px hsla(199, 100%, 50%, 0.3);
 }
 
 .neon-text {
-  text-shadow: 0 0 10px hsla(199, 89%, 48%, 0.8);
+  text-shadow: 0 0 15px hsla(199, 100%, 50%, 0.6);
 }
 
 .btn-gradient {
-  @apply bg-gradient-to-r from-primary to-accent text-white font-bold transition-all hover:opacity-90 active:scale-95;
+  @apply bg-gradient-to-r from-primary via-primary to-accent text-white font-black transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-primary/20;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-white/5 rounded-full hover:bg-white/10;
 }

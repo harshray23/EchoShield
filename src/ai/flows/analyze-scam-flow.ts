@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -12,11 +11,11 @@ const AnalyzeScamInputSchema = z.object({
 const AnalyzeScamOutputSchema = z.object({
   score: z.number().describe('Risk score 0-100'),
   confidence: z.number(),
-  verdict: z.string(),
-  explanation: z.string(),
-  redFlags: z.array(z.string()),
-  advice: z.string(),
-  checklist: z.array(z.string()),
+  verdict: z.string().describe('Short clear verdict, e.g. "Gift Card Scam Attempt"'),
+  explanation: z.string().describe('Educational explanation of WHY this is a scam.'),
+  redFlags: z.array(z.string()).describe('List of specific manipulation tactics identified.'),
+  advice: z.string().describe('Clear next steps for the user.'),
+  checklist: z.array(z.string()).describe('Mandatory safety steps.'),
 });
 
 export type AnalyzeScamInput = z.infer<typeof AnalyzeScamInputSchema>;
@@ -26,26 +25,30 @@ const analyzePrompt = ai.definePrompt({
   name: 'analyzeScamPrompt',
   input: { schema: AnalyzeScamInputSchema },
   output: { schema: AnalyzeScamOutputSchema },
-  prompt: `You are EchoShield AI, an expert cybersecurity specialist.
-Analyze the following {{type}} for potential scams, phishing, or social engineering manipulation.
+  prompt: `You are EchoShield AI, the world's most advanced cybersecurity forensic analyst specializing in social engineering and scam detection.
+
+Your goal is not just to identify scams, but to EDUCATE the user on the specific tactics used.
+
+Analyze the provided {{type}} content for:
+- Phishing patterns
+- Emotional manipulation (fear, urgency, greed)
+- Impersonation of brands, banks, or family
+- Requests for sensitive data (OTP, password, KYC)
+- Requests for unconventional payments (Gift cards, Crypto, off-platform)
 
 {{#if (eq type "text")}}
-Content: """{{{content}}}"""
+Chat/Text Content: """{{{content}}}"""
 {{/if}}
 
 {{#if (eq type "image")}}
-Look at this screenshot for suspicious URLs, urgent language, impersonation of banks/brands, or OTP requests: {{media url=content}}
+Examine this screenshot (OCR if necessary) for red flags: {{media url=content}}
 {{/if}}
 
-Identify red flags like:
-- Sense of Urgency
-- Fear Tactics
-- Requests for OTP/Passwords
-- Gift Card payment requests
-- Fake Job Offers
-- Bank Impersonation
+{{#if (eq type "voice")}}
+(Assuming content is a transcript or processed voice memo) Examine for high-pressure speech and manipulation: {{content}}
+{{/if}}
 
-Provide a detailed risk score (0-100), a verdict, explanation, red flags, advice, and a safety checklist.`,
+Be critical. If the risk is low, explain why it appears safe but still advise caution. If high, be explicit about the deception technique (e.g., "The 'Pig Butchering' scam," "The 'Grandparent' scam").`,
 });
 
 export async function analyzeScam(input: AnalyzeScamInput): Promise<AnalyzeScamOutput> {
