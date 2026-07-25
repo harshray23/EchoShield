@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -6,7 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { SCAM_DETECTION_SYSTEM_INSTRUCTION } from '@/ai/prompts/scam-templates';
+import { SCAM_SIMULATOR_SYSTEM_INSTRUCTION } from '@/ai/prompts/scam-templates';
 
 const SimulationInputSchema = z.object({
   scenario: z.string().describe('The scam scenario to simulate (e.g., "Bank KYC update scam").'),
@@ -30,29 +31,34 @@ const simulatorPrompt = ai.definePrompt({
   name: 'simulatorPrompt',
   input: { schema: SimulationInputSchema },
   output: { schema: SimulationOutputSchema },
-  system: SCAM_DETECTION_SYSTEM_INSTRUCTION,
+  system: SCAM_SIMULATOR_SYSTEM_INSTRUCTION,
   prompt: `
-  Act as a highly persuasive scammer in a SAFE EDUCATIONAL SIMULATION. 
-  
   Scenario: {{{scenario}}}
   
-  Your goal is to get the user to share a piece of sensitive information (OTP, password, link click, or money transfer).
-  
-  Conversation History:
+  Current Conversation History:
   {{#each history}}
   - {{role}}: {{content}}
   {{/each}}
   
-  GUIDELINES:
-  1. Be realistic. Use the manipulation tactics identified in EchoShield.
-  2. If the user shares something that looks like an OTP or password, set 'didVictimFallForIt' to true and 'isEnded' to true.
-  3. If the user calls you out or stops the scam, set 'isEnded' to true and provide an 'educationalInsight' about what you were trying to do.
-  4. Keep responses concise and high-pressure.
+  TASK:
+  Continue the simulation based on the guidelines in your system prompt. 
+  If this is the first message (history is empty), introduce yourself as the relevant entity (e.g., Bank Manager, FedEx agent) and start the hook.
   `,
 });
 
+const simulatorFlow = ai.defineFlow(
+  {
+    name: 'simulatorFlow',
+    inputSchema: SimulationInputSchema,
+    outputSchema: SimulationOutputSchema,
+  },
+  async (input) => {
+    const { output } = await simulatorPrompt(input);
+    if (!output) throw new Error('Simulation link unstable');
+    return output;
+  }
+);
+
 export async function continueSimulation(input: SimulationInput): Promise<SimulationOutput> {
-  const { output } = await simulatorPrompt(input);
-  if (!output) throw new Error('Simulation link unstable');
-  return output;
+  return simulatorFlow(input);
 }

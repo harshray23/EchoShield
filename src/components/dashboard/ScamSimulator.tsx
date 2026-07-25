@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -29,19 +30,26 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Initial message from scammer
+    let isMounted = true;
     const startSim = async () => {
       setLoading(true);
       try {
         const res = await continueSimulation({ scenario, history: [] });
-        setMessages([{ role: 'model', content: res.message }]);
+        if (isMounted) {
+          setMessages([{ role: 'model', content: res.message }]);
+        }
       } catch (e) {
-        toast({ variant: 'destructive', title: 'Simulator Link Failed' });
+        if (isMounted) {
+          toast({ variant: 'destructive', title: 'Simulator Link Failed' });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     startSim();
+    return () => { isMounted = false; };
   }, [scenario, toast]);
 
   useEffect(() => {

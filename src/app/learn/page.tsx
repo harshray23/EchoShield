@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -69,7 +70,7 @@ export default function LearnPage() {
       <header className="space-y-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-primary/20 rounded-2xl cyber-glow">
-            <BookOpen className="h-8 w-8 text-primary" />
+            < BookOpen className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-4xl font-black tracking-tight">Safety Academy</h1>
         </div>
@@ -140,7 +141,7 @@ export default function LearnPage() {
 
       {/* Module Detail Dialog */}
       <Dialog open={!!activeModule} onOpenChange={(open) => !open && setActiveModule(null)}>
-        <DialogContent className="max-w-3xl glass-card rounded-[3rem] p-0 border-white/5 overflow-hidden">
+        <DialogContent className="max-w-3xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden z-[101]">
           {activeModule ? (
             <div className="flex flex-col">
               <DialogHeader className="p-8 bg-primary/10 border-b border-white/5 space-y-4 text-left">
@@ -198,7 +199,7 @@ export default function LearnPage() {
             <div className="p-12 text-center">
               <DialogTitle className="sr-only">Loading Module</DialogTitle>
               <DialogDescription className="sr-only">Please wait while the module defense protocols are initialized.</DialogDescription>
-              <BookOpen className="h-12 w-12 text-primary animate-pulse mx-auto" />
+              < BookOpen className="h-12 w-12 text-primary animate-pulse mx-auto" />
             </div>
           )}
         </DialogContent>
@@ -206,7 +207,7 @@ export default function LearnPage() {
 
       {/* Simulator Dialog */}
       <Dialog open={isSimulatorOpen} onOpenChange={setIsSimulatorOpen}>
-        <DialogContent className="max-w-2xl glass-card rounded-[3rem] p-0 border-white/5 overflow-hidden">
+        <DialogContent className="max-w-2xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden z-[101]">
           <DialogHeader className="sr-only">
             <DialogTitle>Nova Scam Simulator</DialogTitle>
             <DialogDescription>Experience and identify social engineering threats in a safe environment.</DialogDescription>
