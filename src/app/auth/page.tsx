@@ -9,7 +9,8 @@ import { useAuth, useUser, useFirestore } from '@/firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signInAnonymously 
 } from 'firebase/auth';
@@ -19,7 +20,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Fingerprint, Ghost, ShieldCheck, AlertCircle, ExternalLink } from 'lucide-react';
+import { Fingerprint, Ghost, ShieldCheck, AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -37,12 +38,6 @@ export default function AuthPage() {
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      router.push('/dashboard');
-    }
-  }, [user, authLoading, router]);
-
   const createUserProfile = async (uid: string, email: string) => {
     const userRef = doc(db, 'users', uid);
     await setDoc(userRef, {
@@ -52,6 +47,26 @@ export default function AuthPage() {
       updatedAt: serverTimestamp(),
     }, { merge: true });
   };
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+
+    // Handle redirect result for Google sign-in
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          await createUserProfile(result.user.uid, result.user.email || '');
+          toast({ title: "Identity Verified", description: "Access granted via redirect." });
+        }
+      } catch (e: any) {
+        handleAuthError(e);
+      }
+    };
+    handleRedirect();
+  }, [user, authLoading, router, auth]);
 
   const form = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
@@ -67,6 +82,13 @@ export default function AuthPage() {
         title: "Domain Not Authorized", 
         description: "Your security link requires domain authorization in the Firebase Console." 
       });
+    } else if (e.code === 'auth/popup-blocked') {
+      toast({ 
+        variant: "destructive", 
+        title: "Popup Blocked", 
+        description: "Your browser blocked the authentication window. Attempting redirect mode..." 
+      });
+      onGoogleLogin();
     } else {
       toast({ variant: "destructive", title: "Authentication Failed", description: e.message });
     }
@@ -102,11 +124,8 @@ export default function AuthPage() {
   const onGoogleLogin = async () => {
     setDomainError(null);
     try {
-      const credential = await signInWithPopup(auth, new GoogleAuthProvider());
-      if (credential.user) {
-        await createUserProfile(credential.user.uid, credential.user.email || '');
-      }
-      toast({ title: "Google Link Established" });
+      // Using redirect instead of popup to fix auth/popup-blocked errors in workstation environments
+      await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch (e: any) {
       handleAuthError(e);
     }
@@ -125,7 +144,11 @@ export default function AuthPage() {
     }
   };
 
-  if (authLoading) return null;
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="h-12 w-12 text-primary animate-spin" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background relative overflow-hidden">

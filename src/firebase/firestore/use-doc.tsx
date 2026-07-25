@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -39,7 +38,8 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
           });
           errorEmitter.emit('permission-error', permissionError);
         } else {
-          console.error(`Firestore ${serverError.code}: ${serverError.message}`);
+          // Suppress console.error to prevent Next.js dev overlay from blocking the UI.
+          console.warn(`Firestore ${serverError.code}: ${serverError.message}`);
         }
         setError(serverError);
         setLoading(false);

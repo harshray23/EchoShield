@@ -58,8 +58,8 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           
           errorEmitter.emit('permission-error', permissionError);
         } else if (serverError.code === 'failed-precondition') {
-          // Do not console.error here as it triggers the Next.js overlay.
-          // The error state is returned and handled by UI components.
+          // Do not console.error here as it triggers the Next.js overlay in development.
+          // The error state is returned and handled by UI components via helpful alerts.
           console.warn('Firestore Index Required: See UI alert for creation link.');
         }
         
