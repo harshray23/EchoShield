@@ -1,3 +1,4 @@
+
 'use client';
 
 import { motion } from 'framer-motion';
@@ -21,16 +22,25 @@ export function RiskMeter({ score }: RiskMeterProps) {
   const config = getRiskConfig(score);
 
   return (
-    <div className="relative h-64 w-64 flex items-center justify-center">
+    <div 
+      className="relative h-64 w-64 flex items-center justify-center"
+      role="img"
+      aria-label={`Forensic Cyber Heat Meter: ${score}% Risk - ${config.label}`}
+    >
       {/* Background Glow */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 4, repeat: Infinity }}
         className={`absolute inset-0 rounded-full blur-3xl ${config.color.replace('text-', 'bg-')}`}
+        aria-hidden="true"
       />
 
-      <svg className="h-full w-full -rotate-90 filter drop-shadow-2xl relative z-10">
+      <svg 
+        className="h-full w-full -rotate-90 filter drop-shadow-2xl relative z-10"
+        viewBox="0 0 256 256"
+        aria-hidden="true"
+      >
         <circle
           cx="128"
           cy="128"
@@ -68,7 +78,7 @@ export function RiskMeter({ score }: RiskMeterProps) {
             {score}%
           </span>
           <div className="flex flex-col items-center -mt-1">
-            <span className={`text-[12px] font-black tracking-[0.3em] uppercase ${config.color}`}>
+            <span className={`text-[12px] font-black tracking-[0.3em] uppercase ${config.label === 'Safe' ? 'text-accent' : config.color}`}>
               {config.label}
             </span>
             <span className="text-[8px] font-black text-muted-foreground tracking-[0.4em] uppercase opacity-50">
@@ -79,8 +89,8 @@ export function RiskMeter({ score }: RiskMeterProps) {
       </div>
       
       {/* Decorative Outer Ring */}
-      <div className="absolute inset-0 border border-white/5 rounded-full scale-[1.05]" />
-      <div className="absolute inset-0 border border-dashed border-white/10 rounded-full scale-[1.15] opacity-20 animate-[spin_20s_linear_infinite]" />
+      <div className="absolute inset-0 border border-white/5 rounded-full scale-[1.05]" aria-hidden="true" />
+      <div className="absolute inset-0 border border-dashed border-white/10 rounded-full scale-[1.15] opacity-20 animate-[spin_20s_linear_infinite]" aria-hidden="true" />
     </div>
   );
 }

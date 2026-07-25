@@ -1,12 +1,13 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, MessageSquare, Loader2, FileWarning } from 'lucide-react';
+import { Upload, MessageSquare, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TriageCenterProps {
@@ -17,17 +18,10 @@ interface TriageCenterProps {
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-const SUPPORTED_TYPES = [
-  'image/png', 'image/jpeg', 'image/jpg',
-  'application/pdf',
-  'text/plain',
-  'audio/mpeg', 'audio/wav', 'audio/mp3',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-];
-
 export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
   const [chatText, setChatText] = useState('');
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,6 +51,17 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
     reader.readAsDataURL(file);
   };
 
+  const onDropZoneClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onDropZoneClick();
+    }
+  };
+
   return (
     <Card className="glass-card border-primary/20 rounded-[2rem]">
       <CardHeader>
@@ -71,10 +76,18 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
           </TabsList>
           
           <TabsContent value="upload" className="pt-4">
-            <div className="group border-2 border-dashed border-primary/20 rounded-3xl p-8 text-center space-y-4 hover:border-primary transition-all cursor-pointer relative bg-primary/5 hover:bg-primary/10">
+            <div 
+              role="button"
+              tabIndex={0}
+              onClick={onDropZoneClick}
+              onKeyDown={onKeyDown}
+              aria-label="Upload evidence files. Maximum 20MB. Supported types: Image, Audio, PDF, Text, Docx"
+              className="group border-2 border-dashed border-primary/20 rounded-3xl p-8 text-center space-y-4 hover:border-primary transition-all cursor-pointer relative bg-primary/5 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary outline-none"
+            >
               <input 
+                ref={fileInputRef}
                 type="file" 
-                className="absolute inset-0 opacity-0 cursor-pointer" 
+                className="hidden" 
                 onChange={handleFileUpload}
                 accept=".png,.jpg,.jpeg,.pdf,.txt,.mp3,.wav,.docx"
                 disabled={isAnalyzing}
@@ -98,20 +111,22 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
               value={chatText}
               onChange={(e) => setChatText(e.target.value)}
               disabled={isAnalyzing}
+              aria-label="Chat input terminal"
             />
             <Button 
               className="w-full h-12 rounded-xl btn-gradient cyber-glow" 
               onClick={() => onAnalyze('text', chatText)}
               disabled={isAnalyzing || !chatText.trim()}
+              aria-label="Analyze behavioral patterns in chat text"
             >
-              {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+              {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" aria-hidden="true" />}
               Analyze Behavioral Patterns
             </Button>
           </TabsContent>
         </Tabs>
 
         {isAnalyzing && (
-          <div className="space-y-3 p-4 bg-primary/5 rounded-2xl border border-primary/10 animate-pulse">
+          <div className="space-y-3 p-4 bg-primary/5 rounded-2xl border border-primary/10 animate-pulse" role="status" aria-live="polite">
             <div className="flex justify-between text-[10px] font-black tracking-widest text-primary uppercase">
               <span>Scanning Protocol Active</span>
               <span>Metadata Triage</span>
