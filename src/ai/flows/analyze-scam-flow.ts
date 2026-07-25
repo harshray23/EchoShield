@@ -31,6 +31,14 @@ const AnalyzeScamOutputSchema = z.object({
     authority: z.number().describe('0-100'),
     greed: z.number().describe('0-100'),
     fear: z.number().describe('0-100'),
+    trust: z.number().describe('0-100'),
+  }),
+  emotionalTriggers: z.object({
+    fear: z.number(),
+    anxiety: z.number(),
+    greed: z.number(),
+    sympathy: z.number(),
+    trustAbuse: z.number(),
   }),
   highlights: z.array(z.object({
     text: z.string().describe('Specific snippet from content'),
@@ -92,12 +100,11 @@ const analyzePrompt = ai.definePrompt({
   {{/if}}
 
   SPECIFIC JUDGE REQUIREMENTS:
-  1. SCAM DNA: Provide scores for Emotion, Urgency, Authority, Greed, and Fear based on the linguistic and visual markers.
-  2. TARGET REASON: Infer why the user was targeted (e.g., "They mention a bank you likely use").
-  3. NUCLEAR THREAT: If the risk is extreme (direct theft, high pressure), set riskLevel to 'nuclear' and trustLabel to 'NUCLEAR ☠️'.
-  4. AI X-RAY: Identify specific phrases in the content and explain why they are red flags in the 'highlights' field.
-  5. GRANDMA MODE: One simple takeaway sentence.
-  6. SIMULATION SCENARIO: Provide a realistic prompt for an AI scam simulator based on this specific threat.
+  1. GEO-INTELLIGENCE: Specifically check if this is an Indian context scam (KYC, Electricity, UPI, Customs, etc.).
+  2. SCAM DNA: Provide scores for Emotion, Urgency, Authority, Greed, Fear, and Trust abuse.
+  3. EMOTIONAL TRIGGERS: Map the content to specific emotional levels (Fear, Anxiety, Greed, Sympathy, Trust Abuse).
+  4. NUCLEAR THREAT: If the risk is extreme (direct theft, high pressure), set riskLevel to 'nuclear' and trustLabel to 'NUCLEAR ☠️'.
+  5. AI X-RAY: Identify specific phrases in the content and explain why they are red flags.
   `,
 });
 

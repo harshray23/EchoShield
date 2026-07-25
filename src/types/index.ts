@@ -32,6 +32,15 @@ export interface ScamDNA {
   authority: number;
   greed: number;
   fear: number;
+  trust: number;
+}
+
+export interface EmotionalTriggers {
+  fear: number;
+  anxiety: number;
+  greed: number;
+  sympathy: number;
+  trustAbuse: number;
 }
 
 export interface Highlight {
@@ -60,6 +69,7 @@ export interface ScamAnalysis {
   comparisons: ComparisonPoint[];
   timeline: TimelineStep[];
   scamDNA: ScamDNA;
+  emotionalTriggers: EmotionalTriggers;
   highlights: Highlight[];
   timestamp: any;
   metadata?: Record<string, any>;

@@ -2,22 +2,19 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
-  AlertTriangle, CheckCircle2, Volume2, Download, ShieldAlert, Zap, Info, MessageSquare, 
-  ExternalLink, Key, Wallet, BrainCircuit, ShieldCheck, CheckCircle, FileSearch, FileText,
-  Heart, Users, Share2, ShieldX, PhoneCall, Copy, Ghost, Sparkles, Search, Languages,
-  Fingerprint, Skull, ArrowRight, Activity, Eye, Shield, Play
+  AlertTriangle, ShieldAlert, Heart, Share2, Skull, Play, Download, FileText,
+  Fingerprint, Search, Activity, Eye, Users, MessageSquare, Wallet, PhoneCall, ShieldX
 } from 'lucide-react';
 import { RiskMeter } from './RiskMeter';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScamSimulator } from './ScamSimulator';
 
 interface AnalysisDetailsProps {
@@ -124,54 +121,89 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
       {!showGrandmaMode && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* SCAM DNA CARD */}
-          <Card className="glass-card border-white/5 rounded-[2.5rem] p-8 space-y-6">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
-              <Fingerprint className="h-5 w-5" /> SCAM DNA ANALYSIS
+          {/* SCAM DNA CARD - FUTURISTIC FINGERPRINT STYLE */}
+          <Card className="glass-card border-white/5 rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Fingerprint className="h-40 w-40 text-primary" />
             </div>
-            <div className="space-y-4">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary relative z-10">
+              <Fingerprint className="h-5 w-5" /> SCAM DNA FINGERPRINT
+            </div>
+            <div className="space-y-6 relative z-10">
               {Object.entries(result.scamDNA).map(([key, val]) => (
-                <div key={key} className="space-y-1.5">
-                  <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter">
+                <div key={key} className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                     <span className="text-muted-foreground">{key}</span>
                     <span className={val > 70 ? 'text-destructive' : 'text-primary'}>{val}%</span>
                   </div>
-                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden flex">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${val}%` }}
-                      className={`h-full ${val > 70 ? 'bg-destructive' : 'bg-primary'}`}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className={`h-full ${val > 80 ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : val > 50 ? 'bg-orange-500' : 'bg-primary'} rounded-full`}
                     />
                   </div>
                 </div>
               ))}
             </div>
-            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl relative z-10">
               <p className="text-[10px] font-black text-primary uppercase mb-1">Targeting Logic</p>
               <p className="text-xs font-medium leading-relaxed text-white/80">{result.targetReason}</p>
             </div>
           </Card>
 
-          {/* AI DETECTIVE CASE FILE */}
-          <Card className="glass-card border-primary/20 rounded-[2.5rem] lg:col-span-2 p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/10 rounded-2xl text-primary"><Search className="h-6 w-6" /></div>
-                <div>
-                  <h3 className="text-2xl font-black uppercase tracking-tighter">Forensic Case File</h3>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">AI Detective Observations</p>
+          {/* EMOTIONAL MANIPULATION METER */}
+          <Card className="glass-card border-primary/20 rounded-[2.5rem] p-8 space-y-8 lg:col-span-2">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-primary/10 rounded-2xl text-primary"><Activity className="h-6 w-6" /></div>
+              <div>
+                <h3 className="text-2xl font-black uppercase tracking-tighter">Manipulation Meter</h3>
+                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">Geo-Intelligence Insights (India)</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  {[
+                    { label: '😨 Fear', value: result.emotionalTriggers.fear, color: 'bg-red-500' },
+                    { label: '😰 Anxiety', value: result.emotionalTriggers.anxiety, color: 'bg-orange-500' },
+                    { label: '💰 Greed', value: result.emotionalTriggers.greed, color: 'bg-yellow-500' },
+                    { label: '❤️ Sympathy', value: result.emotionalTriggers.sympathy, color: 'bg-accent' },
+                    { label: '🏛️ Trust Abuse', value: result.emotionalTriggers.trustAbuse, color: 'bg-primary' },
+                  ].map((trigger) => (
+                    <div key={trigger.label} className="space-y-2">
+                      <div className="flex justify-between text-[11px] font-bold uppercase">
+                        <span>{trigger.label}</span>
+                        <span>{trigger.value}%</span>
+                      </div>
+                      <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${trigger.value}%` }}
+                          className={`h-full ${trigger.color} shadow-lg`}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <Badge variant="outline" className="rounded-full border-primary/30 text-primary">CONFIDENCE: {(result.confidence * 100).toFixed(0)}%</Badge>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {result.aiDetectiveInsights.map((insight, i) => (
-                <div key={i} className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/20 transition-all">
-                  <div className="p-2 h-fit bg-primary/10 rounded-lg text-primary"><Activity className="h-4 w-4" /></div>
-                  <p className="text-xs font-medium leading-relaxed">{insight}</p>
+
+              <div className="flex flex-col justify-center space-y-4 p-6 bg-white/5 rounded-[2rem] border border-white/5">
+                <div className="flex items-center gap-2 text-primary">
+                  <Search className="h-5 w-5" />
+                  <span className="text-xs font-black uppercase tracking-widest">Nova's Observations</span>
                 </div>
-              ))}
+                <div className="space-y-3">
+                  {result.aiDetectiveInsights.slice(0, 3).map((insight, i) => (
+                    <div key={i} className="flex gap-3 items-start">
+                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                      <p className="text-xs font-medium leading-relaxed text-white/70 italic">"{insight}"</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </Card>
         </div>
@@ -214,34 +246,9 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
         </Card>
       )}
 
-      {/* AI X-RAY HIGHLIGHTS */}
-      {!showGrandmaMode && (
-        <Card className="glass-card border-white/5 rounded-[2.5rem] overflow-hidden">
-          <div className="bg-white/5 p-8 border-b border-white/5 flex items-center gap-3">
-             <Eye className="h-6 w-6 text-primary" />
-             <h3 className="text-xl font-black uppercase tracking-tighter">AI X-Ray Detection</h3>
-          </div>
-          <div className="p-8 space-y-6">
-            {result.highlights.map((h, i) => (
-              <div key={i} className={`p-5 rounded-3xl border ${h.type === 'danger' ? 'bg-destructive/5 border-destructive/20' : 'bg-primary/5 border-primary/20'} flex flex-col md:flex-row gap-6 items-center`}>
-                <div className="flex-1 space-y-2">
-                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Snippet Spotted</p>
-                   <p className={`text-lg font-bold ${h.type === 'danger' ? 'text-destructive' : 'text-primary'}`}>"{h.text}"</p>
-                </div>
-                <div className="h-px w-full md:w-px md:h-12 bg-white/10" />
-                <div className="flex-1">
-                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Forensic Why</p>
-                   <p className="text-sm font-medium leading-relaxed text-white/80">{h.explanation}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
       {/* NUCLEAR PROTOCOL */}
       {result.riskLevel === 'nuclear' && (
-        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="p-10 bg-red-600/10 border-2 border-red-600 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-10 shadow-[0_0_60px_rgba(255,0,0,0.3)]">
+        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="p-10 bg-red-600/10 border-2 border-red-600 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-10 shadow-[0_0_60_px_rgba(255,0,0,0.3)]">
           <div className="space-y-3 text-center md:text-left">
             <h3 className="text-4xl font-black text-red-600 uppercase tracking-tighter">🚨 NUCLEAR THREAT DETECTED</h3>
             <p className="text-lg font-medium text-white/90 max-w-lg">Nova identified a severe active attack. Execution of digital defense protocols is MANDATORY.</p>
