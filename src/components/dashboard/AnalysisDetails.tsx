@@ -21,8 +21,6 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
   };
 
   const downloadReport = () => {
-    // In a real app, this would generate a PDF. 
-    // For the prototype, we'll simulate the download.
     const content = JSON.stringify(result, null, 2);
     const blob = new Blob([content], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -34,14 +32,14 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
     document.body.removeChild(a);
   };
 
-  const statusColor = result.riskLevel === 'malicious' ? 'text-destructive' : 
-                      result.riskLevel === 'suspicious' ? 'text-orange-500' : 'text-accent';
+  const getRiskColor = (score: number) => {
+    if (score <= 40) return 'text-accent';
+    if (score <= 60) return 'text-yellow-500';
+    if (score <= 80) return 'text-orange-500';
+    return 'text-destructive';
+  };
 
-  const bgColor = result.riskLevel === 'malicious' ? 'bg-destructive' : 
-                   result.riskLevel === 'suspicious' ? 'bg-orange-500' : 'bg-accent';
-
-  const glowColor = result.riskLevel === 'malicious' ? 'shadow-destructive/20' : 
-                    result.riskLevel === 'suspicious' ? 'shadow-orange-500/20' : 'shadow-accent/20';
+  const statusColor = getRiskColor(result.riskScore);
 
   return (
     <motion.div
@@ -50,37 +48,33 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
       className="space-y-8"
     >
       {/* Risk Level Header Card */}
-      <Card className={`glass-card border-white/5 overflow-hidden rounded-[2.5rem] relative ${glowColor} shadow-2xl`}>
-        <div className={`h-1.5 w-full ${bgColor} opacity-50`} />
+      <Card className={`glass-card border-white/5 overflow-hidden rounded-[2.5rem] relative shadow-2xl`}>
+        <div className={`h-1.5 w-full bg-gradient-to-r from-primary to-accent opacity-50`} />
         <CardContent className="p-8 sm:p-10">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
             <div className="space-y-6 text-center lg:text-left flex-1">
               <div className="space-y-2">
                 <div className="flex items-center justify-center lg:justify-start gap-2">
-                   <div className={`h-2 w-2 rounded-full ${bgColor} animate-pulse`} />
+                   <div className={`h-2 w-2 rounded-full bg-primary animate-pulse`} />
                    <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground font-black">Threat Analysis Protocol</p>
                 </div>
-                <h2 className={`text-6xl sm:text-7xl font-black tracking-tighter uppercase leading-none ${statusColor}`}>
-                  {result.riskLevel}
+                <h2 className={`text-5xl sm:text-6xl font-black tracking-tighter uppercase leading-tight ${statusColor}`}>
+                  {result.scamType}
                 </h2>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-3 mt-4">
                   <span className="bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
                     Confidence: {(result.confidence * 100).toFixed(0)}%
                   </span>
                   <span className="bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                    <Info className="h-3 w-3 text-primary" /> Verified Threat
+                    <Info className="h-3 w-3 text-primary" /> Forensic Analysis Verified
                   </span>
                 </div>
               </div>
-              <p className="text-2xl font-bold tracking-tight text-white/90 leading-tight">
-                {result.scamType}
-              </p>
-              <p className="text-muted-foreground leading-relaxed max-w-xl text-sm font-medium">
+              <p className="text-muted-foreground leading-relaxed max-w-xl text-sm font-medium italic">
                 {result.summary}
               </p>
             </div>
-            <div className="relative group">
-               <div className={`absolute inset-0 rounded-full blur-3xl opacity-20 ${bgColor} group-hover:opacity-40 transition-opacity`} />
+            <div className="relative group shrink-0">
                <RiskMeter score={result.riskScore} />
             </div>
           </div>
@@ -95,7 +89,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
               <BookOpen className="h-6 w-6" /> 
               Forensic Psychology
             </CardTitle>
-            <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Manipulation Heuristics</CardDescription>
+            <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Scam Logic Breakdown</CardDescription>
           </CardHeader>
           <CardContent className="p-8 pt-0 space-y-6">
             <p className="text-muted-foreground leading-relaxed font-medium text-sm">
@@ -113,7 +107,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                   </div>
                   <div className="text-left">
                     <p className="font-black text-sm tracking-tight uppercase">Play Warning</p>
-                    <p className="text-[9px] uppercase font-bold tracking-[0.2em] opacity-60">AI Protective Synthesis</p>
+                    <p className="text-[9px] uppercase font-bold tracking-[0.2em] opacity-60">AI Protective Voice</p>
                   </div>
                 </div>
                 <Zap className="h-4 w-4 opacity-50" />
@@ -129,7 +123,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
               <AlertTriangle className="h-6 w-6" /> 
               Behavioral Red Flags
             </CardTitle>
-            <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Social Engineering Traits</CardDescription>
+            <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Manipulation Indicators</CardDescription>
           </CardHeader>
           <CardContent className="p-8 pt-0">
             <div className="space-y-3">
@@ -142,7 +136,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                   className="p-4 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-4 group hover:bg-white/10 transition-colors"
                 >
                   <div className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_12px_rgba(239,68,68,1)] flex-shrink-0" />
-                  <span className="text-sm font-bold tracking-tight text-white/80 uppercase tracking-tighter">{flag}</span>
+                  <span className="text-xs font-bold tracking-tight text-white/80 uppercase tracking-tighter">{flag}</span>
                 </motion.div>
               ))}
             </div>
@@ -156,9 +150,9 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
               <div className="space-y-2">
                 <CardTitle className="flex items-center text-2xl font-black gap-3 text-accent uppercase tracking-tighter">
                   <CheckCircle2 className="h-8 w-8" /> 
-                  Action Protocol
+                  Safety Protocol
                 </CardTitle>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Authorized Response Checklist</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Emergency Action Checklist</p>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -178,17 +172,9 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
             
             <div className="lg:w-80 bg-accent/10 p-8 sm:p-10 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-accent/10 sm:rounded-b-[2.5rem] lg:rounded-bl-none">
               <div className="space-y-6">
-                <div>
-                  <h4 className="font-black text-accent mb-2 tracking-[0.3em] uppercase text-[10px]">Forensic Confidence</h4>
-                  <p className="text-5xl font-black tracking-tighter">{(result.confidence * 100).toFixed(0)}%</p>
-                  <div className="h-1.5 w-full bg-white/10 rounded-full mt-4 overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-accent"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${result.confidence * 100}%` }}
-                      transition={{ duration: 1, delay: 0.5 }}
-                    />
-                  </div>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                   <h4 className="font-black text-accent mb-2 tracking-[0.3em] uppercase text-[9px]">Forensic Conclusion</h4>
+                   <p className="text-2xl font-black tracking-tighter leading-none">THREAT {result.riskScore > 60 ? 'DETECTED' : result.riskScore > 20 ? 'SUSPECTED' : 'LOW'}</p>
                 </div>
 
                 <div className="space-y-3">
@@ -200,7 +186,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                     <Download className="h-4 w-4" /> Download Report
                   </Button>
                   <Button className="w-full h-12 rounded-xl bg-accent hover:bg-accent/90 text-white font-black text-[10px] uppercase tracking-widest">
-                    Submit Threat Database
+                    Seal & Store Evidence
                   </Button>
                 </div>
               </div>
