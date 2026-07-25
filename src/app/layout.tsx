@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { AppProvider } from '@/lib/AppContext';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'FireBase Explorer',
-  description: 'An interactive web application to explore core Firebase features.',
+  title: 'New Project',
+  description: 'Starting something amazing.',
 };
 
 export default function RootLayout({
@@ -15,16 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased">
-        <AppProvider>
-          {children}
-          <Toaster />
-        </AppProvider>
+      <body className="min-h-screen font-sans antialiased">
+        {children}
+        <Toaster />
       </body>
     </html>
   );
