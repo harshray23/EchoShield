@@ -2,13 +2,12 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
-const firebaseConfig = {
+export const firebaseConfig = {
   projectId: "firebase-explorer-3mnk1",
   appId: "1:322431168944:web:0ae9605fc842e1a1f96675",
   storageBucket: "firebase-explorer-3mnk1.firebasestorage.app",
   apiKey: "AIzaSyDWbmtKVoDzKfF823bfGXc7qHypjSB3WDg",
-  // CRITICAL: Synchronized with the EXACT domain in your Firebase Console
-  authDomain: "fir-explorer-3mnk1.firebaseapp.com",
+  authDomain: "firebase-explorer-3mnk1.firebaseapp.com",
   messagingSenderId: "322431168944"
 };
 

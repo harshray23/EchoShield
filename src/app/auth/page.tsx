@@ -43,9 +43,10 @@ export default function AuthPage() {
   React.useEffect(() => {
     if (authLoading || hasHandledRedirect.current) return;
 
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result?.user) {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user && !hasHandledRedirect.current) {
           hasHandledRedirect.current = true;
           const db = getFirestore();
           const userRef = doc(db, 'users', result.user.uid);
@@ -60,17 +61,19 @@ export default function AuthPage() {
           toast({ title: "Identity Verified", description: "Welcome back, Agent." });
           router.push('/dashboard');
         }
-      })
-      .catch((e: any) => {
+      } catch (e: any) {
         if (e.code === 'auth/unauthorized-domain') {
           setDomainError(window.location.hostname);
         } else {
-          console.warn("Auth redirect cleanup:", e.message);
+          console.warn("Auth redirect protocol:", e.message);
         }
-      });
+      }
+    };
+
+    checkRedirect();
   }, [auth, authLoading, router, toast]);
 
-  const onEmailLogin = async (e: React.FormEvent) => {
+  const onEmailLogin = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -79,9 +82,9 @@ export default function AuthPage() {
       toast({ variant: "destructive", title: "Access Denied", description: e.message });
       setLoading(false);
     }
-  };
+  }, [auth, email, password, toast]);
 
-  const onEmailSignup = async (e: React.FormEvent) => {
+  const onEmailSignup = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -98,22 +101,22 @@ export default function AuthPage() {
       toast({ variant: "destructive", title: "Enrollment Failed", description: e.message });
       setLoading(false);
     }
-  };
+  }, [auth, email, password, toast]);
 
-  const onGoogleLogin = () => {
+  const onGoogleLogin = React.useCallback(() => {
     const provider = new GoogleAuthProvider();
     signInWithRedirect(auth, provider).catch(e => {
        toast({ variant: "destructive", title: "Protocol Error", description: e.message });
     });
-  };
+  }, [auth, toast]);
 
-  const onGuestLogin = () => {
+  const onGuestLogin = React.useCallback(() => {
     setLoading(true);
     signInAnonymously(auth).catch(e => {
       toast({ variant: "destructive", title: "Ghost Link Failed", description: e.message });
       setLoading(false);
     });
-  };
+  }, [auth, toast]);
 
   if (authLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
