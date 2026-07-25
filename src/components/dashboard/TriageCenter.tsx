@@ -7,8 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, MessageSquare, Loader2 } from 'lucide-react';
+import { Upload, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface TriageCenterProps {
   onAnalyze: (type: 'text' | 'image' | 'voice' | 'document', content: string) => Promise<void>;
@@ -18,14 +19,25 @@ interface TriageCenterProps {
 const MAX_FILE_SIZE_MB = 20;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
+// Blocked executable and potentially dangerous extensions
+const BLOCKED_EXTENSIONS = [
+  '.exe', '.bat', '.cmd', '.sh', '.php', '.js', '.vbs', '.msi', '.com', '.scr', '.pif', '.apk'
+];
+
 export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
   const [chatText, setChatText] = useState('');
+  const [securityWarning, setSecurityWarning] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const validateFile = (file: File): boolean => {
+    const fileName = file.name.toLowerCase();
+    const isExecutable = BLOCKED_EXTENSIONS.some(ext => fileName.endsWith(ext));
+    
+    if (isExecutable) {
+      setSecurityWarning(`Security Alert: The file "${file.name}" was rejected because executable formats are blocked for safety.`);
+      return false;
+    }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
       toast({
@@ -33,6 +45,20 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
         title: 'Payload Too Large',
         description: `Maximum upload size is ${MAX_FILE_SIZE_MB}MB. File rejected.`,
       });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSecurityWarning(null);
+
+    if (!validateFile(file)) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -48,6 +74,13 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
 
       onAnalyze(type, base64);
     };
+    reader.onerror = () => {
+      toast({
+        variant: 'destructive',
+        title: 'Read Error',
+        description: 'Failed to read the forensic payload.',
+      });
+    };
     reader.readAsDataURL(file);
   };
 
@@ -62,6 +95,17 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
     }
   };
 
+  const sanitizeInput = (text: string) => {
+    // Basic sanitization to prevent common injection patterns
+    return text.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, "").trim();
+  };
+
+  const handleChatAnalysis = () => {
+    const sanitized = sanitizeInput(chatText);
+    if (!sanitized) return;
+    onAnalyze('text', sanitized);
+  };
+
   return (
     <Card className="glass-card border-primary/20 rounded-[2rem]">
       <CardHeader>
@@ -69,6 +113,14 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
         <CardDescription>Upload forensic evidence or paste suspicious chats.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {securityWarning && (
+          <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 rounded-2xl">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle className="font-black uppercase text-[10px] tracking-widest">Protocol Violation</AlertTitle>
+            <AlertDescription className="text-xs font-medium">{securityWarning}</AlertDescription>
+          </Alert>
+        )}
+
         <Tabs defaultValue="upload" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-white/5 rounded-xl">
             <TabsTrigger value="upload" className="rounded-lg font-bold uppercase text-[10px] tracking-widest">Evidence Files</TabsTrigger>
@@ -81,7 +133,7 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
               tabIndex={0}
               onClick={onDropZoneClick}
               onKeyDown={onKeyDown}
-              aria-label="Upload evidence files. Maximum 20MB. Supported types: Image, Audio, PDF, Text, Docx"
+              aria-label="Upload evidence files. Maximum 20MB. Supported types: Image, Audio, PDF, Text, Docx. Executables are blocked."
               className="group border-2 border-dashed border-primary/20 rounded-3xl p-8 text-center space-y-4 hover:border-primary transition-all cursor-pointer relative bg-primary/5 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary outline-none"
             >
               <input 
@@ -115,7 +167,7 @@ export function TriageCenter({ onAnalyze, isAnalyzing }: TriageCenterProps) {
             />
             <Button 
               className="w-full h-12 rounded-xl btn-gradient cyber-glow" 
-              onClick={() => onAnalyze('text', chatText)}
+              onClick={handleChatAnalysis}
               disabled={isAnalyzing || !chatText.trim()}
               aria-label="Analyze behavioral patterns in chat text"
             >

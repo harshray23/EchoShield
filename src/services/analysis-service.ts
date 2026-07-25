@@ -12,6 +12,10 @@ import { ScamAnalysis } from '@/types';
 export class AnalysisService {
   constructor(private db: Firestore, private userId: string) {}
 
+  private sanitize(text: string): string {
+    return text.replace(/[<>]/g, "").trim();
+  }
+
   async performAnalysis(input: { type: 'text' | 'image' | 'voice' | 'document'; content: string }): Promise<{ analysis: AnalyzeScamOutput; warningAudio?: string; caseId: string }> {
     let ocrText: string | undefined;
 
@@ -23,9 +27,12 @@ export class AnalysisService {
       }
     }
 
+    // Sanitize text inputs if applicable
+    const sanitizedContent = input.type === 'text' ? this.sanitize(input.content) : input.content;
+
     const analysis = await analyzeScam({
       type: input.type,
-      content: input.content,
+      content: sanitizedContent,
       ocrText,
     });
 
@@ -44,14 +51,12 @@ export class AnalysisService {
       recommendations: analysis.recommendations,
       timeline: analysis.timeline,
       timestamp: serverTimestamp(),
-      metadata: ocrText ? { ocrText } : undefined,
+      metadata: ocrText ? { ocrText: this.sanitize(ocrText) } : undefined,
     };
 
-    // Use doc() to pre-generate the ID for the Case ID
     const docRef = doc(collection(this.db, 'analyses'));
     const caseId = docRef.id;
 
-    // Fire and forget mutation
     setDoc(docRef, analysisData).catch(async (err) => {
       const permissionError = new FirestorePermissionError({
         path: docRef.path,
