@@ -1,10 +1,10 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 import wav from 'wav';
+import { PromptService } from '@/services/prompt-service';
 
 const VoiceWarningInputSchema = z.string().describe('The warning text to narrate.');
 
@@ -19,7 +19,7 @@ export async function generateVoiceWarning(text: string) {
         },
       },
     },
-    prompt: `Narrate the following warning in a professional, protective tone: ${text}`,
+    prompt: PromptService.getVoiceWarningPrompt().replace('{{{text}}}', text),
   });
 
   if (!media) throw new Error('No audio generated');
