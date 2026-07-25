@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,44 +38,9 @@ export default function AuthPage() {
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
 
-  const createUserProfile = async (uid: string, email: string) => {
-    const userRef = doc(db, 'users', uid);
-    await setDoc(userRef, {
-      email,
-      safetyScore: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-  };
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      router.push('/dashboard');
-    }
-
-    // Handle redirect result for Google sign-in
-    const handleRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          await createUserProfile(result.user.uid, result.user.email || '');
-          toast({ title: "Identity Verified", description: "Access granted via redirect." });
-        }
-      } catch (e: any) {
-        handleAuthError(e);
-      }
-    };
-    handleRedirect();
-  }, [user, authLoading, router, auth]);
-
-  const form = useForm<z.infer<typeof authSchema>>({
-    resolver: zodResolver(authSchema),
-    defaultValues: { email: '', password: '' },
-  });
-
-  const handleAuthError = (e: any) => {
+  const handleAuthError = useCallback((e: any) => {
     if (e.code === 'auth/unauthorized-domain') {
-      const domain = window.location.hostname;
+      const domain = typeof window !== 'undefined' ? window.location.hostname : '';
       setDomainError(domain);
       toast({ 
         variant: "destructive", 
@@ -86,13 +51,51 @@ export default function AuthPage() {
       toast({ 
         variant: "destructive", 
         title: "Popup Blocked", 
-        description: "Your browser blocked the authentication window. Attempting redirect mode..." 
+        description: "Authentication window blocked. Using redirect mode..." 
       });
-      onGoogleLogin();
+      signInWithRedirect(auth, new GoogleAuthProvider());
     } else {
       toast({ variant: "destructive", title: "Authentication Failed", description: e.message });
     }
-  };
+  }, [auth, toast]);
+
+  const createUserProfile = useCallback(async (uid: string, email: string) => {
+    const userRef = doc(db, 'users', uid);
+    await setDoc(userRef, {
+      email,
+      safetyScore: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      userId: uid
+    }, { merge: true });
+  }, [db]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          await createUserProfile(result.user.uid, result.user.email || '');
+          toast({ title: "Identity Verified", description: "Access granted via redirect." });
+        }
+      } catch (e: any) {
+        handleAuthError(e);
+      }
+    };
+    
+    if (!authLoading && !user) {
+      checkRedirect();
+    }
+  }, [user, authLoading, router, auth, toast, handleAuthError, createUserProfile]);
+
+  const form = useForm<z.infer<typeof authSchema>>({
+    resolver: zodResolver(authSchema),
+    defaultValues: { email: '', password: '' },
+  });
 
   const onLogin = async (values: z.infer<typeof authSchema>) => {
     setLoading(true);
@@ -124,7 +127,6 @@ export default function AuthPage() {
   const onGoogleLogin = async () => {
     setDomainError(null);
     try {
-      // Using redirect instead of popup to fix auth/popup-blocked errors in workstation environments
       await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch (e: any) {
       handleAuthError(e);

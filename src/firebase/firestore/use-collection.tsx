@@ -49,7 +49,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           path = 'analyses';
         }
         
-        // Only emit the specialized permission error if the code is permission-denied
+        // Only emit permission errors. Suppress crash-inducing logs for other errors (like missing indices).
         if (serverError.code === 'permission-denied') {
           const permissionError = new FirestorePermissionError({
             path,
@@ -58,9 +58,8 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           
           errorEmitter.emit('permission-error', permissionError);
         } else if (serverError.code === 'failed-precondition') {
-          // Do not console.error here as it triggers the Next.js overlay in development.
-          // The error state is returned and handled by UI components via helpful alerts.
-          console.warn('Firestore Index Required: See UI alert for creation link.');
+          // Log missing index warning without triggering Next.js crash overlay
+          console.warn(`Firestore Index Warning: ${serverError.message}`);
         }
         
         setError(serverError);
