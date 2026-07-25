@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -142,64 +141,58 @@ export default function LearnPage() {
       {/* Module Detail Dialog */}
       <Dialog open={!!activeModule} onOpenChange={(open) => !open && setActiveModule(null)}>
         <DialogContent className="max-w-3xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden z-[101]">
-          {activeModule ? (
-            <div className="flex flex-col">
-              <DialogHeader className="p-8 bg-primary/10 border-b border-white/5 space-y-4 text-left">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/20 rounded-2xl text-primary">{activeModule.icon}</div>
-                  <div>
-                    <DialogTitle className="text-3xl font-black tracking-tighter uppercase">{activeModule.title}</DialogTitle>
-                    <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70">{activeModule.difficulty} Defense Protocol</DialogDescription>
-                  </div>
+          <DialogHeader className="p-8 bg-primary/10 border-b border-white/5 space-y-4 text-left">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/20 rounded-2xl text-primary">{activeModule?.icon}</div>
+              <div>
+                <DialogTitle className="text-3xl font-black tracking-tighter uppercase">{activeModule?.title || 'Loading Protocol...'}</DialogTitle>
+                <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70">{activeModule?.difficulty || 'Standard'} Defense Protocol</DialogDescription>
+              </div>
+            </div>
+            {activeModule && (
+              <p className="text-lg font-medium text-white/90 leading-relaxed italic">
+                "{activeModule.desc}"
+              </p>
+            )}
+          </DialogHeader>
+          
+          {activeModule && (
+            <div className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Info className="h-4 w-4" /> Core Concepts
+                  </h3>
+                  <ul className="space-y-3">
+                    {activeModule.points.map((p, i) => (
+                      <li key={i} className="flex gap-3 text-sm font-medium text-muted-foreground">
+                        <CheckCircle className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <p className="text-lg font-medium text-white/90 leading-relaxed italic">
-                  "{activeModule.desc}"
-                </p>
-              </DialogHeader>
-              
-              <div className="p-8 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                      <Info className="h-4 w-4" /> Core Concepts
-                    </h3>
-                    <ul className="space-y-3">
-                      {activeModule.points.map((p, i) => (
-                        <li key={i} className="flex gap-3 text-sm font-medium text-muted-foreground">
-                          <CheckCircle className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="p-6 bg-white/5 rounded-[2rem] border border-white/10 space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-accent flex items-center gap-2">
-                      <Play className="h-4 w-4" /> Interactive Triage
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Ready to apply what you've learned? Launch the Nova Simulator to test your resistance against this specific threat vector.
-                    </p>
-                    <Button 
-                      onClick={() => handleLaunchSimulator(activeModule.scenario)}
-                      className="w-full rounded-xl bg-accent/20 text-accent hover:bg-accent hover:text-white transition-all font-bold"
-                    >
-                      Practice Scenario
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-white/5 flex justify-end">
-                  <Button onClick={() => setActiveModule(null)} variant="ghost" className="rounded-xl font-bold gap-2">
-                    Complete Module <ArrowRight className="h-4 w-4" />
+                <div className="p-6 bg-white/5 rounded-[2rem] border border-white/10 space-y-4">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-accent flex items-center gap-2">
+                    <Play className="h-4 w-4" /> Interactive Triage
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Ready to apply what you've learned? Launch the Nova Simulator to test your resistance against this specific threat vector.
+                  </p>
+                  <Button 
+                    onClick={() => handleLaunchSimulator(activeModule.scenario)}
+                    className="w-full rounded-xl bg-accent/20 text-accent hover:bg-accent hover:text-white transition-all font-bold"
+                  >
+                    Practice Scenario
                   </Button>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="p-12 text-center">
-              <DialogTitle className="sr-only">Forensic Shield Loading</DialogTitle>
-              <DialogDescription className="sr-only">Initializing academy protocols for real-time education.</DialogDescription>
-              < BookOpen className="h-12 w-12 text-primary animate-pulse mx-auto" />
+
+              <div className="pt-4 border-t border-white/5 flex justify-end">
+                <Button onClick={() => setActiveModule(null)} variant="ghost" className="rounded-xl font-bold gap-2">
+                  Complete Module <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
