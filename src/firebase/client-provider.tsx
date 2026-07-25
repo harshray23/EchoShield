@@ -10,20 +10,29 @@ import { firebaseConfig } from './config';
 /**
  * Client-side Firebase Provider.
  * Initializes Firebase services once on the client and provides them to the app.
- * Uses direct initialization to bypass circular dependencies in the barrel file.
+ * Direct initialization prevents circular dependencies with the index barrel file.
  */
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const services = React.useMemo(() => {
-    // Direct initialization logic to avoid circular dependency with index.ts
+  const [services, setServices] = React.useState<{
+    firebaseApp: any;
+    firestore: any;
+    auth: any;
+  } | null>(null);
+
+  React.useEffect(() => {
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    return {
+    setServices({
       firebaseApp: app,
       auth: getAuth(app),
       firestore: getFirestore(app),
-    };
+    });
   }, []);
+
+  if (!services) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <FirebaseProvider 
