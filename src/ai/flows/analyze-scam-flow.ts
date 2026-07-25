@@ -7,6 +7,7 @@ import { PromptService } from '@/services/prompt-service';
 const AnalyzeScamInputSchema = z.object({
   type: z.enum(['text', 'image', 'voice', 'document']),
   content: z.string().describe('Text content or base64 data URI for media/document.'),
+  ocrText: z.string().optional().describe('Text extracted via OCR if applicable.'),
 });
 
 const AnalyzeScamOutputSchema = z.object({

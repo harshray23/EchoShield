@@ -1,9 +1,9 @@
-
 'use client';
 
 import { Firestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { analyzeScam, type AnalyzeScamInput, type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { generateVoiceWarning } from '@/ai/flows/voice-warning-flow';
+import { extractTextFromImage } from '@/ai/flows/ocr-flow';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { ScamAnalysis } from '@/types';
@@ -11,11 +11,26 @@ import { ScamAnalysis } from '@/types';
 export class AnalysisService {
   constructor(private db: Firestore, private userId: string) {}
 
-  async performAnalysis(input: AnalyzeScamInput): Promise<{ analysis: AnalyzeScamOutput; warningAudio?: string }> {
-    // 1. Run AI Analysis
-    const analysis = await analyzeScam(input);
+  async performAnalysis(input: { type: 'text' | 'image' | 'voice' | 'document'; content: string }): Promise<{ analysis: AnalyzeScamOutput; warningAudio?: string }> {
+    let ocrText: string | undefined;
 
-    // 2. Persist to Firestore (Non-blocking)
+    // 1. Mandatory OCR step for images
+    if (input.type === 'image') {
+      try {
+        ocrText = await extractTextFromImage(input.content);
+      } catch (e) {
+        console.error('OCR Extraction failed', e);
+      }
+    }
+
+    // 2. Run AI Analysis with potential OCR text
+    const analysis = await analyzeScam({
+      type: input.type,
+      content: input.content,
+      ocrText,
+    });
+
+    // 3. Persist to Firestore (Non-blocking)
     const analysisData: Omit<ScamAnalysis, 'id'> = {
       userId: this.userId,
       type: input.type,
@@ -28,6 +43,7 @@ export class AnalysisService {
       psychology: analysis.psychology,
       recommendations: analysis.recommendations,
       timestamp: serverTimestamp(),
+      metadata: ocrText ? { ocrText } : undefined,
     };
 
     addDoc(collection(this.db, 'analyses'), analysisData).catch(async (err) => {
@@ -39,7 +55,7 @@ export class AnalysisService {
       errorEmitter.emit('permission-error', permissionError);
     });
 
-    // 3. Generate Voice Warning if high risk
+    // 4. Generate Voice Warning if high risk
     let warningAudio: string | undefined;
     if (analysis.riskScore > 40) {
       warningAudio = await generateVoiceWarning(analysis.scamType);

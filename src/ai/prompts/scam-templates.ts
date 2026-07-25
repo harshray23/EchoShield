@@ -32,7 +32,15 @@ Chat/Text Content: """{{{content}}}"""
 {{/if}}
 
 {{#if (eq type "image")}}
-Examine this screenshot (OCR and Visual Analysis) for red flags: {{media url=content}}
+Visual Forensic Analysis:
+Examine this screenshot for visual red flags, manipulated UI elements, or brand impersonation: {{media url=content}}
+
+Extracted Forensic OCR Text:
+"""
+{{{ocrText}}}
+"""
+
+Use the extracted OCR text as the primary evidence for phishing links, grammar inconsistencies, and manipulative language.
 {{/if}}
 
 {{#if (eq type "voice")}}
