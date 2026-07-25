@@ -1,10 +1,10 @@
+
 'use client';
 
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
-  BookOpen, 
   AlertTriangle, 
   CheckCircle2, 
   Volume2, 
@@ -19,17 +19,21 @@ import {
   BrainCircuit,
   ShieldCheck,
   CheckCircle,
-  FileSearch
+  FileSearch,
+  FileText
 } from 'lucide-react';
 import { RiskMeter } from './RiskMeter';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 interface AnalysisDetailsProps {
   result: AnalyzeScamOutput;
   audioUrl: string | null;
+  caseId: string | null;
 }
 
-export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
+export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsProps) {
   const playAudio = () => {
     if (audioUrl) {
       const audio = new Audio(audioUrl);
@@ -37,16 +41,100 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
     }
   };
 
-  const downloadReport = () => {
-    const content = JSON.stringify(result, null, 2);
-    const blob = new Blob([content], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `echoshield-report-${result.scamType.toLowerCase().replace(/\s+/g, '-')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    const timestamp = new Date().toLocaleString();
+    const caseNum = caseId?.toUpperCase() || 'TEMP-' + Math.random().toString(36).substring(7).toUpperCase();
+
+    // Enterprise Header
+    doc.setFillColor(5, 6, 15); // Background dark
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(0, 183, 255); // Primary Blue
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ECHOSHIELD AI', 20, 25);
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.text('FORENSIC SECURITY REPORT', 20, 32);
+    
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(9);
+    doc.text(`CASE ID: ${caseNum}`, 140, 25);
+    doc.text(`GENERATED: ${timestamp}`, 140, 30);
+
+    // Risk Section
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.text('1. THREAT CLASSIFICATION', 20, 55);
+    
+    const riskColor = result.riskScore > 60 ? [239, 68, 68] : result.riskScore > 40 ? [249, 115, 22] : [34, 197, 94];
+    doc.setDrawColor(riskColor[0], riskColor[1], riskColor[2]);
+    doc.setLineWidth(1);
+    doc.line(20, 58, 190, 58);
+
+    doc.setFontSize(18);
+    doc.setTextColor(riskColor[0], riskColor[1], riskColor[2]);
+    doc.text(`${result.scamType.toUpperCase()}`, 20, 70);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Risk Score: ${result.riskScore}%`, 20, 80);
+    doc.text(`Confidence Level: ${(result.confidence * 100).toFixed(0)}%`, 20, 87);
+
+    // Summary
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.text('2. FORENSIC SUMMARY', 20, 105);
+    doc.line(20, 108, 190, 108);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const splitSummary = doc.splitTextToSize(result.summary, 170);
+    doc.text(splitSummary, 20, 115);
+
+    // Psychology & Tactics
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('3. MANIPULATION TACTICS', 20, 140);
+    doc.line(20, 143, 190, 143);
+    
+    const tacticsText = result.manipulationTactics.join(', ');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`Tactics Identified: ${tacticsText}`, 20, 150);
+    
+    doc.setFont('helvetica', 'normal');
+    const splitPsych = doc.splitTextToSize(result.psychology, 170);
+    doc.text(splitPsych, 20, 160);
+
+    // Recommendations Table
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('4. EMERGENCY PROTOCOL', 20, 190);
+    doc.line(20, 193, 190, 193);
+
+    (doc as any).autoTable({
+      startY: 198,
+      head: [['Step', 'Action Required']],
+      body: result.recommendations.map((rec, i) => [i + 1, rec]),
+      theme: 'striped',
+      headStyles: { fillColor: [0, 183, 255] },
+      styles: { fontSize: 9 }
+    });
+
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('EchoShield AI - Automated Forensic Analysis. Confidential and Protective.', 20, 285);
+      doc.text(`Page ${i} of ${pageCount}`, 180, 285);
+    }
+
+    doc.save(`EchoShield-Forensic-Case-${caseNum.substring(0, 8)}.pdf`);
   };
 
   const getRiskColor = (score: number) => {
@@ -82,9 +170,11 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
             <div className="space-y-6 text-center lg:text-left flex-1">
               <div className="space-y-2">
-                <div className="flex items-center justify-center lg:justify-start gap-2">
+                <div className="flex items-center justify-center lg:justify-start gap-3">
                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                   <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground font-black">Threat Analysis Protocol</p>
+                   <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground font-black">
+                     Threat Analysis Protocol {caseId && <span className="text-white/40 ml-2">// CASE ID: {caseId.substring(0, 8).toUpperCase()}</span>}
+                   </p>
                 </div>
                 <h2 className={`text-5xl sm:text-6xl font-black tracking-tighter uppercase leading-tight ${statusColor}`}>
                   {result.scamType}
@@ -102,10 +192,10 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                 {result.summary}
               </p>
 
-              {/* Explainability Section ⭐ */}
+              {/* Explainability Section */}
               <div className="pt-4 border-t border-white/5">
                 <p className="text-[10px] font-black tracking-widest uppercase text-primary mb-3 flex items-center gap-2">
-                  <FileSearch className="h-3 w-3" /> Confidence Evidence
+                  <FileSearch className="h-3 w-3" /> Forensic Evidence
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {result.confidenceReasons.map((reason, i) => (
@@ -124,7 +214,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
         </CardContent>
       </Card>
 
-      {/* Psychology Panel ⭐ */}
+      {/* Psychology Panel */}
       <Card className="glass-card border-primary/20 rounded-[2.5rem] overflow-hidden">
         <CardHeader className="p-8 pb-4">
           <div className="flex items-center justify-between">
@@ -136,11 +226,6 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
               <CardDescription className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">
                 Detected Manipulation Tactics
               </CardDescription>
-            </div>
-            <div className="hidden sm:block">
-              <span className="text-[10px] font-black bg-primary/10 text-primary px-4 py-2 rounded-xl border border-primary/20 uppercase tracking-widest">
-                AI Behavior Analysis
-              </span>
             </div>
           </div>
         </CardHeader>
@@ -220,7 +305,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                   }`}>
                     {step.label}
                   </h4>
-                  <p className="text-sm font-medium text-muted-foreground leading-relaxed max-lg">
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -260,7 +345,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                 onClick={playAudio}
               >
                 <Volume2 className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                <span className="font-black text-xs uppercase tracking-[0.2em]">Play Audio Warning</span>
+                <span className="font-black text-xs uppercase tracking-[0.2em]">Play Forensic Audio Warning</span>
               </Button>
             )}
           </CardContent>
@@ -282,11 +367,15 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
               </div>
             ))}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button variant="outline" className="flex-1 h-12 rounded-xl border-white/10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={downloadReport}>
-                <Download className="h-4 w-4" /> Download
+              <Button 
+                variant="outline" 
+                className="flex-1 h-12 rounded-xl border-white/10 font-black uppercase text-[10px] tracking-widest gap-2 hover:bg-white/5" 
+                onClick={generatePDF}
+              >
+                <FileText className="h-4 w-4" /> Download PDF Report
               </Button>
               <Button className="flex-1 h-12 rounded-xl btn-gradient font-black uppercase text-[10px] tracking-widest">
-                Store Evidence
+                Chain of Custody
               </Button>
             </div>
           </CardContent>

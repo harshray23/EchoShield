@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -14,6 +15,7 @@ import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 export default function DashboardPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalyzeScamOutput | null>(null);
+  const [caseId, setCaseId] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   
   const { user } = useUser();
@@ -25,29 +27,31 @@ export default function DashboardPage() {
     
     setIsAnalyzing(true);
     setResult(null);
+    setCaseId(null);
     setAudioUrl(null);
 
     try {
       const service = new AnalysisService(db, user.uid);
-      const { analysis, warningAudio } = await service.performAnalysis({ type, content });
+      const { analysis, warningAudio, caseId: newCaseId } = await service.performAnalysis({ type, content });
       
-      // Delay just a bit to let the animation finish its stages
+      // Artificial delay for futuristic animation immersion
       setTimeout(() => {
         setResult(analysis);
+        setCaseId(newCaseId);
         if (warningAudio) setAudioUrl(warningAudio);
         setIsAnalyzing(false);
 
         toast({
-          title: 'Analysis Complete',
-          description: `Threat level identified as ${analysis.riskScore}% risk.`,
+          title: 'Forensic Triage Complete',
+          description: `Case ${newCaseId.substring(0, 8)} identified as ${analysis.riskLevel.toUpperCase()}.`,
         });
-      }, 1000);
+      }, 1500);
 
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Analysis Failed',
-        description: 'Intelligence network connection timed out.',
+        title: 'Network Intelligence Failure',
+        description: 'Unable to establish forensic link. Please try again.',
       });
       setIsAnalyzing(false);
     }
@@ -60,7 +64,9 @@ export default function DashboardPage() {
           <Fingerprint className="h-10 w-10 text-primary" />
           Security Console
         </h1>
-        <p className="text-muted-foreground font-medium">Real-time threat detection and behavioral analysis.</p>
+        <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.4em] opacity-70">
+          Real-time threat detection and behavioral analytics
+        </p>
       </header>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -88,11 +94,13 @@ export default function DashboardPage() {
                     <Fingerprint className="h-12 w-12 text-primary" />
                   </motion.div>
                 </div>
-                <h3 className="text-2xl font-bold">Awaiting Behavioral Data</h3>
-                <p className="text-muted-foreground max-w-sm mt-2">Upload suspicious media to initiate forensic triage.</p>
+                <h3 className="text-2xl font-bold uppercase tracking-tight">Awaiting Evidence</h3>
+                <p className="text-muted-foreground max-w-sm mt-2 text-sm font-medium">
+                  Upload screenshots, audio recordings, or suspicious messages to initiate forensic analysis.
+                </p>
               </motion.div>
             ) : (
-              <AnalysisDetails key="result" result={result} audioUrl={audioUrl} />
+              <AnalysisDetails key="result" result={result} audioUrl={audioUrl} caseId={caseId} />
             )}
           </AnimatePresence>
         </div>
