@@ -1,6 +1,6 @@
 'use client';
 
-import { Firestore, collection, doc, setDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
+import { Firestore, collection, doc, setDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { analyzeScam, type AnalyzeScamInput, type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { generateVoiceWarning } from '@/ai/flows/voice-warning-flow';
 import { extractTextFromImage } from '@/ai/flows/ocr-flow';
@@ -11,6 +11,7 @@ export class AnalysisService {
   constructor(private db: Firestore, private userId: string, private userName?: string) {}
 
   private sanitize(text: string): string {
+    // Basic sanitization to prevent simple HTML/Script injection
     return text.replace(/[<>]/g, "").trim();
   }
 
@@ -21,7 +22,7 @@ export class AnalysisService {
       try {
         ocrText = await extractTextFromImage(input.content);
       } catch (e) {
-        // Silent fail for OCR
+        // Silent fail for OCR is acceptable in forensic triage
       }
     }
 
@@ -46,6 +47,7 @@ export class AnalysisService {
       metadata: ocrText ? { ocrText: this.sanitize(ocrText) } : undefined,
     };
 
+    // Save Forensic Record
     setDoc(docRef, analysisData).catch(async (err) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
@@ -54,13 +56,16 @@ export class AnalysisService {
       }));
     });
 
-    // Update user's safety score
+    // CRITICAL FIX: Use setDoc with merge: true to ensure profile existence
+    // This prevents the "document not found" error for new users
     const userRef = doc(this.db, 'users', this.userId);
-    updateDoc(userRef, {
+    setDoc(userRef, {
       safetyScore: increment(analysis.safetyScoreEarned),
       lastAnalysisAt: serverTimestamp(),
-    }).catch(() => {
-      // Create user doc if it doesn't exist (silent fail/handle)
+      updatedAt: serverTimestamp(),
+    }, { merge: true }).catch((err) => {
+      // Non-blocking but error is handled centrally
+      console.warn("Safety score persistence delayed:", err.message);
     });
 
     let warningAudio: string | undefined;
@@ -68,7 +73,7 @@ export class AnalysisService {
       try {
         warningAudio = await generateVoiceWarning(analysis.personalizedWarning || analysis.scamType);
       } catch (e) {
-        // Voice is secondary
+        // Voice is a secondary enrichment
       }
     }
 
