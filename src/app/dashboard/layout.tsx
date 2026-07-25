@@ -1,8 +1,10 @@
+
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarFooter } from '@/components/ui/sidebar';
-import { LayoutDashboard, Shield, History, BookOpen, Settings, LogOut, User as UserIcon, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Shield, History, BookOpen, Settings, LogOut, Ghost, ShieldAlert } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,6 +15,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const auth = useAuth();
   const { user, loading } = useUser();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth');
+    }
+  }, [user, loading, router]);
 
   const navItems = [
     { href: '/dashboard', label: 'Console', icon: LayoutDashboard },
@@ -26,7 +34,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/');
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Shield className="h-12 w-12 text-primary animate-pulse" />
+          <p className="text-xs font-black tracking-widest uppercase text-muted-foreground">Synchronizing Link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   return (
     <SidebarProvider>
@@ -60,26 +79,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarContent>
 
         <SidebarFooter className="p-4 border-t border-white/5">
-          {user ? (
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl">
+          <div className="flex flex-col gap-3 p-3 bg-white/5 rounded-2xl">
+            <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
                 <AvatarImage src={user.photoURL || undefined} />
-                <AvatarFallback className="bg-primary/20 text-primary font-bold">
-                  {user.displayName?.[0] || 'U'}
+                <AvatarFallback className="bg-primary/20 text-primary font-bold uppercase">
+                  {user.isAnonymous ? <Ghost className="h-5 w-5" /> : (user.displayName?.[0] || user.email?.[0] || 'U')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-bold truncate">{user.displayName || user.email}</p>
-                <button onClick={handleLogout} className="text-[10px] font-black tracking-widest uppercase text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors">
-                  <LogOut className="h-3 w-3" /> Terminate Session
-                </button>
+                <p className="text-sm font-bold truncate">
+                  {user.isAnonymous ? 'Guest Agent' : (user.displayName || user.email)}
+                </p>
+                <p className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">
+                  {user.isAnonymous ? 'Ephemeral Mode' : 'Verified Profile'}
+                </p>
               </div>
             </div>
-          ) : (
-            <Button className="w-full rounded-xl" onClick={() => router.push('/auth')}>
-              Secure Access
-            </Button>
-          )}
+            
+            {user.isAnonymous && (
+              <div className="px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded-lg flex items-center gap-2">
+                <ShieldAlert className="h-3 w-3 text-orange-500" />
+                <span className="text-[9px] font-bold text-orange-500 uppercase">Data will not persist</span>
+              </div>
+            )}
+
+            <button 
+              onClick={handleLogout} 
+              className="mt-2 w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest uppercase text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+            >
+              <LogOut className="h-3 w-3" /> Terminate Session
+            </button>
+          </div>
         </SidebarFooter>
       </Sidebar>
 

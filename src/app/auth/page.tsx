@@ -1,18 +1,26 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { useAuth, useUser } from '@/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider,
+  signInAnonymously 
+} from 'firebase/auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Fingerprint } from 'lucide-react';
+import { Fingerprint, Google, Ghost, ShieldCheck } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const authSchema = z.object({
   email: z.string().email('Access protocol requires valid email.'),
@@ -23,6 +31,14 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const auth = useAuth();
+  const { user, loading: authLoading } = useUser();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   const form = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
@@ -33,9 +49,9 @@ export default function AuthPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/dashboard');
-    } catch (e) {
-      console.error(e);
+      toast({ title: "Identity Verified", description: "Access granted to the console." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Access Denied", description: e.message });
     } finally {
       setLoading(false);
     }
@@ -45,9 +61,9 @@ export default function AuthPage() {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/dashboard');
-    } catch (e) {
-      console.error(e);
+      toast({ title: "Identity Registered", description: "Your digital shield is now active." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Enrollment Failed", description: e.message });
     } finally {
       setLoading(false);
     }
@@ -56,11 +72,25 @@ export default function AuthPage() {
   const onGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
-      router.push('/dashboard');
-    } catch (e) {
-      console.error(e);
+      toast({ title: "Google Link Established" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Link Failed", description: e.message });
     }
   };
+
+  const onGuestLogin = async () => {
+    setLoading(true);
+    try {
+      await signInAnonymously(auth);
+      toast({ title: "Guest Access Enabled", description: "Limited persistence mode active." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Guest Entry Failed", description: e.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background relative overflow-hidden">
@@ -79,8 +109,8 @@ export default function AuthPage() {
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 p-1 bg-white/5 rounded-2xl mb-8 h-12">
-            <TabsTrigger value="login" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">ACCESS</TabsTrigger>
-            <TabsTrigger value="signup" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">ENROLL</TabsTrigger>
+            <TabsTrigger value="login" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white uppercase tracking-tighter">Access</TabsTrigger>
+            <TabsTrigger value="signup" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white uppercase tracking-tighter">Enroll</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
@@ -107,10 +137,24 @@ export default function AuthPage() {
                     </Button>
                   </form>
                 </Form>
-                <div className="relative"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground font-black tracking-widest">or third-party</span></div></div>
-                <Button variant="outline" className="w-full h-12 rounded-xl border-white/10 bg-white/5" onClick={onGoogleLogin}>
-                  Secure Login with Google
-                </Button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-white/10" />
+                  </div>
+                  <div className="relative flex justify-center text-[10px] uppercase">
+                    <span className="bg-[#05060f] px-2 text-muted-foreground font-black tracking-widest">Multi-Auth Protocols</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-white/5 font-bold flex gap-2" onClick={onGoogleLogin}>
+                    <ShieldCheck className="h-4 w-4 text-primary" /> Google
+                  </Button>
+                  <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-white/5 font-bold flex gap-2" onClick={onGuestLogin} disabled={loading}>
+                    <Ghost className="h-4 w-4 text-accent" /> Guest
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
