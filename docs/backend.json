@@ -1,0 +1,46 @@
+
+{
+  "entities": {
+    "ScamAnalysis": {
+      "title": "Scam Analysis",
+      "description": "Result of a scam detection analysis performed by the AI.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["screenshot", "voice", "text"] },
+        "score": { "type": "number", "description": "Scam risk score from 0 to 100" },
+        "confidence": { "type": "number" },
+        "verdict": { "type": "string" },
+        "explanation": { "type": "string" },
+        "redFlags": { "type": "array", "items": { "type": "string" } },
+        "advice": { "type": "string" },
+        "checklist": { "type": "array", "items": { "type": "string" } },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "metadata": { "type": "object" }
+      },
+      "required": ["userId", "score", "verdict"]
+    },
+    "UserSetting": {
+      "title": "User Setting",
+      "description": "User specific application settings.",
+      "type": "object",
+      "properties": {
+        "notificationsEnabled": { "type": "boolean" },
+        "theme": { "type": "string" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/analyses/{analysisId}": {
+      "schema": "ScamAnalysis",
+      "description": "A collection of scam analyses indexed by ID."
+    },
+    "/users/{userId}/settings/general": {
+      "schema": "UserSetting",
+      "description": "General settings for a specific user."
+    }
+  }
+}
