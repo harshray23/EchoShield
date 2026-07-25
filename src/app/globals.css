@@ -41,7 +41,12 @@
 }
 
 .glass-card {
-  @apply bg-card/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)];
+  @apply bg-card/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden;
+}
+
+.glass-card::before {
+  content: "";
+  @apply absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none;
 }
 
 .cyber-glow {
@@ -63,6 +68,23 @@
 @keyframes pulse-red {
   from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
   to { box-shadow: 0 0 40px rgba(255, 0, 0, 0.6); }
+}
+
+.scanline {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, hsla(199, 100%, 50%, 0.5), transparent);
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: scan 3s linear infinite;
+  z-index: 20;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  from { top: -2%; }
+  to { top: 102%; }
 }
 
 ::-webkit-scrollbar {

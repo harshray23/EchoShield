@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   AlertTriangle, ShieldAlert, Heart, Share2, Skull, Play, Download, FileText,
-  Fingerprint, Search, Activity, Eye, Users, MessageSquare, Wallet, PhoneCall, ShieldX
+  Fingerprint, Search, Activity, Eye, Users, MessageSquare, Wallet, PhoneCall, ShieldX, Brain, Sparkles, AlertCircle
 } from 'lucide-react';
 import { RiskMeter } from './RiskMeter';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
@@ -23,10 +23,37 @@ interface AnalysisDetailsProps {
   caseId: string | null;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.3
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 30, opacity: 0, scale: 0.98 },
+  visible: { 
+    y: 0, 
+    opacity: 1, 
+    scale: 1,
+    transition: { type: 'spring', damping: 20, stiffness: 100 }
+  }
+};
+
 export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsProps) {
   const [showGrandmaMode, setShowGrandmaMode] = useState(false);
   const [showSim, setShowSim] = useState(false);
+  const [isDecoding, setIsDecoding] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsDecoding(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const trustColors: Record<string, string> = {
     'Trusted': 'text-accent bg-accent/10 border-accent/20',
@@ -72,216 +99,292 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`space-y-8 pb-24 ${showGrandmaMode ? 'max-w-4xl mx-auto' : ''}`}>
-      
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className={`space-y-10 pb-24 ${showGrandmaMode ? 'max-w-4xl mx-auto' : ''}`}
+    >
       {/* CASE FILE HEADER */}
-      <Card className={`glass-card border-white/5 overflow-hidden rounded-[2.5rem] relative ${result.riskLevel === 'nuclear' ? 'border-red-600/50' : ''}`}>
-        <div className={`h-2 w-full ${result.riskLevel === 'nuclear' ? 'bg-red-600 animate-pulse' : result.riskLevel === 'malicious' ? 'bg-destructive' : 'bg-accent'}`} />
-        <CardContent className="p-8 sm:p-10">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1 space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Badge className={`rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${trustColors[result.trustLabel]}`}>
-                    {result.trustLabel}
-                  </Badge>
-                  {result.riskLevel === 'nuclear' && <Skull className="h-5 w-5 text-red-600 animate-bounce" />}
-                  <span className="text-[10px] text-white/30 font-black uppercase tracking-widest">Case ID: {caseId?.substring(0, 8) || 'Scanning...'}</span>
-                </div>
-                <h2 className={`${showGrandmaMode ? 'text-6xl' : 'text-4xl sm:text-5xl'} font-black tracking-tighter uppercase leading-tight`}>
-                  {result.scamCategory}
-                </h2>
-                <p className={`${showGrandmaMode ? 'text-xl' : 'text-base'} text-muted-foreground italic font-medium leading-relaxed max-w-xl`}>
-                  {showGrandmaMode ? result.grandmaExplanation : result.summary}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-4">
-                <Button 
-                  onClick={() => setShowGrandmaMode(!showGrandmaMode)} 
-                  className={`rounded-2xl h-14 px-8 font-black transition-all ${showGrandmaMode ? 'bg-accent text-white' : 'bg-primary/20 text-primary hover:bg-primary/30'}`}
-                >
-                  <Heart className="mr-2 h-5 w-5" /> {showGrandmaMode ? 'Exit Grandma Mode' : 'Explain Simply'}
-                </Button>
-                <Button onClick={() => setShowSim(true)} variant="outline" className="rounded-2xl border-primary/30 h-14 px-8 font-black text-primary hover:bg-primary hover:text-white transition-all cyber-glow">
-                  <Play className="mr-2 h-5 w-5" /> Experience Scam safely
-                </Button>
-                <Button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`🚨 EchoShield AI detected a threat: ${result.scamType}. Check it out!`)}`, '_blank')} variant="outline" className="rounded-2xl border-white/10 h-14 px-6">
-                  <Share2 className="mr-2 h-5 w-5" /> Share Security Alert
-                </Button>
-              </div>
-            </div>
-            <div className="shrink-0 scale-110">
-              <RiskMeter score={result.riskScore} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {!showGrandmaMode && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* SCAM DNA CARD - FUTURISTIC FINGERPRINT STYLE */}
-          <Card className="glass-card border-white/5 rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Fingerprint className="h-40 w-40 text-primary" />
-            </div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary relative z-10">
-              <Fingerprint className="h-5 w-5" /> SCAM DNA FINGERPRINT
-            </div>
-            <div className="space-y-6 relative z-10">
-              {Object.entries(result.scamDNA).map(([key, val]) => (
-                <div key={key} className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                    <span className="text-muted-foreground">{key}</span>
-                    <span className={val > 70 ? 'text-destructive' : 'text-primary'}>{val}%</span>
-                  </div>
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden flex">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${val}%` }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      className={`h-full ${val > 80 ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : val > 50 ? 'bg-orange-500' : 'bg-primary'} rounded-full`}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl relative z-10">
-              <p className="text-[10px] font-black text-primary uppercase mb-1">Targeting Logic</p>
-              <p className="text-xs font-medium leading-relaxed text-white/80">{result.targetReason}</p>
-            </div>
-          </Card>
-
-          {/* EMOTIONAL MANIPULATION METER */}
-          <Card className="glass-card border-primary/20 rounded-[2.5rem] p-8 space-y-8 lg:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-primary/10 rounded-2xl text-primary"><Activity className="h-6 w-6" /></div>
-              <div>
-                <h3 className="text-2xl font-black uppercase tracking-tighter">Manipulation Meter</h3>
-                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">Geo-Intelligence Insights (India)</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
+      <motion.div variants={itemVariants}>
+        <Card className={`glass-card border-white/5 overflow-hidden rounded-[3rem] shadow-2xl ${result.riskLevel === 'nuclear' ? 'border-red-600/50 shadow-red-900/20' : ''}`}>
+          <div className="scanline" />
+          <div className={`h-3 w-full ${result.riskLevel === 'nuclear' ? 'bg-red-600 animate-pulse' : result.riskLevel === 'malicious' ? 'bg-destructive' : result.riskLevel === 'suspicious' ? 'bg-orange-500' : 'bg-accent'}`} />
+          <CardContent className="p-10 sm:p-14">
+            <div className="flex flex-col xl:flex-row items-center gap-16">
+              <div className="flex-1 space-y-8">
                 <div className="space-y-4">
-                  {[
-                    { label: '😨 Fear', value: result.emotionalTriggers.fear, color: 'bg-red-500' },
-                    { label: '😰 Anxiety', value: result.emotionalTriggers.anxiety, color: 'bg-orange-500' },
-                    { label: '💰 Greed', value: result.emotionalTriggers.greed, color: 'bg-yellow-500' },
-                    { label: '❤️ Sympathy', value: result.emotionalTriggers.sympathy, color: 'bg-accent' },
-                    { label: '🏛️ Trust Abuse', value: result.emotionalTriggers.trustAbuse, color: 'bg-primary' },
-                  ].map((trigger) => (
-                    <div key={trigger.label} className="space-y-2">
-                      <div className="flex justify-between text-[11px] font-bold uppercase">
-                        <span>{trigger.label}</span>
-                        <span>{trigger.value}%</span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Badge className={`rounded-full px-5 py-1.5 text-[11px] font-black uppercase tracking-[0.25em] ${trustColors[result.trustLabel]}`}>
+                      {result.trustLabel}
+                    </Badge>
+                    {result.riskLevel === 'nuclear' && <Skull className="h-6 w-6 text-red-600 animate-bounce" />}
+                    <div className="h-4 w-px bg-white/10 hidden sm:block" />
+                    <span className="text-[10px] text-white/40 font-black uppercase tracking-widest flex items-center gap-2">
+                      <FileText className="h-3.5 w-3.5" /> CASE ID: {caseId?.substring(0, 10) || 'GEN-01'}
+                    </span>
+                  </div>
+                  <h2 className={`${showGrandmaMode ? 'text-6xl' : 'text-5xl sm:text-6xl'} font-black tracking-tighter uppercase leading-[0.9] bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60`}>
+                    {result.scamCategory}
+                  </h2>
+                  <p className={`${showGrandmaMode ? 'text-2xl leading-relaxed' : 'text-lg leading-relaxed'} text-muted-foreground/80 italic font-medium max-w-2xl`}>
+                    {showGrandmaMode ? result.grandmaExplanation : result.summary}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-5">
+                  <Button 
+                    onClick={() => setShowGrandmaMode(!showGrandmaMode)} 
+                    className={`rounded-[1.5rem] h-16 px-10 font-black transition-all text-base ${showGrandmaMode ? 'bg-accent text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]' : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'}`}
+                  >
+                    <Heart className="mr-3 h-6 w-6" /> {showGrandmaMode ? 'EXIT GRANDMA MODE' : 'EXPLAIN SIMPLY'}
+                  </Button>
+                  <Button onClick={() => setShowSim(true)} className="rounded-[1.5rem] h-16 px-10 font-black text-base btn-gradient cyber-glow">
+                    <Play className="mr-3 h-6 w-6" /> EXPERIENCE SAFELY
+                  </Button>
+                  <Button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`🚨 EchoShield AI detected a threat: ${result.scamType}. Check it out!`)}`, '_blank')} variant="outline" className="rounded-[1.5rem] h-16 px-8 border-white/10 hover:bg-white/5 transition-colors">
+                    <Share2 className="mr-3 h-6 w-6" /> SHARE ALERT
+                  </Button>
+                </div>
+              </div>
+              <div className="shrink-0 relative">
+                <RiskMeter score={result.riskScore} />
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-[10px] font-black tracking-[0.4em] uppercase text-primary animate-pulse"
+                >
+                  CALCULATING HEAT...
+                </motion.div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <AnimatePresence>
+        {!showGrandmaMode && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-10"
+          >
+            {/* SCAM DNA CARD - FUTURISTIC FINGERPRINT STYLE */}
+            <motion.div variants={itemVariants}>
+              <Card className="glass-card border-white/5 rounded-[3rem] p-10 space-y-10 relative overflow-hidden group h-full">
+                <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
+                  <Fingerprint className="h-56 w-56 text-primary" />
+                </div>
+                <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-primary relative z-10">
+                  <Fingerprint className="h-6 w-6" /> SCAM DNA FINGERPRINT
+                </div>
+                <div className="space-y-8 relative z-10">
+                  {Object.entries(result.scamDNA).map(([key, val], i) => (
+                    <motion.div 
+                      key={key} 
+                      initial={{ width: 0 }}
+                      animate={{ width: '100%' }}
+                      transition={{ delay: 0.5 + i * 0.1 }}
+                      className="space-y-3"
+                    >
+                      <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+                        <span className="text-muted-foreground">{key}</span>
+                        <span className={val > 75 ? 'text-destructive font-bold' : 'text-primary'}>{val}%</span>
                       </div>
-                      <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-2.5 bg-white/5 rounded-full overflow-hidden p-[2px]">
                         <motion.div 
                           initial={{ width: 0 }}
-                          animate={{ width: `${trigger.value}%` }}
-                          className={`h-full ${trigger.color} shadow-lg`}
+                          animate={{ width: `${val}%` }}
+                          transition={{ duration: 2, ease: "circOut" }}
+                          className={`h-full ${val > 80 ? 'bg-destructive shadow-[0_0_15px_rgba(239,68,68,0.5)]' : val > 50 ? 'bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)]' : 'bg-primary shadow-[0_0_15px_rgba(0,183,255,0.5)]'} rounded-full`}
                         />
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
+                <div className="p-6 bg-primary/5 border border-primary/20 rounded-[2rem] relative z-10 mt-auto">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Brain className="h-4 w-4 text-primary" />
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">Targeting Logic</p>
+                  </div>
+                  <p className="text-xs font-medium leading-relaxed text-white/80 italic">"{result.targetReason}"</p>
+                </div>
+              </Card>
+            </motion.div>
 
-              <div className="flex flex-col justify-center space-y-4 p-6 bg-white/5 rounded-[2rem] border border-white/5">
-                <div className="flex items-center gap-2 text-primary">
-                  <Search className="h-5 w-5" />
-                  <span className="text-xs font-black uppercase tracking-widest">Nova's Observations</span>
-                </div>
-                <div className="space-y-3">
-                  {result.aiDetectiveInsights.slice(0, 3).map((insight, i) => (
-                    <div key={i} className="flex gap-3 items-start">
-                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      <p className="text-xs font-medium leading-relaxed text-white/70 italic">"{insight}"</p>
+            {/* EMOTIONAL MANIPULATION METER */}
+            <motion.div variants={itemVariants} className="lg:col-span-2">
+              <Card className="glass-card border-primary/20 rounded-[3rem] p-10 space-y-10 h-full relative overflow-hidden">
+                <div className="scanline opacity-30" />
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="p-4 bg-primary/10 rounded-[1.5rem] border border-primary/20 text-primary shadow-xl"><Activity className="h-8 w-8" /></div>
+                  <div>
+                    <h3 className="text-3xl font-black uppercase tracking-tighter">Manipulation Decoder</h3>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-3 w-3 text-accent" />
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Gemini Neural Forensic Insight</p>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
+                  <div className="space-y-8">
+                    {[
+                      { label: '😨 Fear Tactics', value: result.emotionalTriggers.fear, color: 'bg-red-500' },
+                      { label: '😰 Anxiety Pressure', value: result.emotionalTriggers.anxiety, color: 'bg-orange-500' },
+                      { label: '💰 Greed Hook', value: result.emotionalTriggers.greed, color: 'bg-yellow-500' },
+                      { label: '❤️ Sympathy Lure', value: result.emotionalTriggers.sympathy, color: 'bg-accent' },
+                      { label: '🏛️ Trust Abuse', value: result.emotionalTriggers.trustAbuse, color: 'bg-primary' },
+                    ].map((trigger, i) => (
+                      <motion.div 
+                        key={trigger.label} 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + i * 0.1 }}
+                        className="space-y-3"
+                      >
+                        <div className="flex justify-between text-[12px] font-black uppercase tracking-tighter">
+                          <span className="text-white/80">{trigger.label}</span>
+                          <span className="text-white">{trigger.value}%</span>
+                        </div>
+                        <div className="h-4 bg-white/5 rounded-full overflow-hidden p-[2px] border border-white/5 shadow-inner">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${trigger.value}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className={`h-full ${trigger.color} rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)]`}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 space-y-6 h-full flex flex-col justify-center shadow-inner relative overflow-hidden group">
+                      <div className="absolute -right-8 -bottom-8 opacity-5 rotate-12 transition-transform group-hover:rotate-0 duration-700">
+                        <Search className="h-48 w-48 text-primary" />
+                      </div>
+                      <div className="flex items-center gap-3 text-primary relative z-10">
+                        <AlertCircle className="h-6 w-6" />
+                        <span className="text-[11px] font-black uppercase tracking-[0.2em]">Neural Evidence Panel</span>
+                      </div>
+                      <div className="space-y-6 relative z-10">
+                        {result.aiDetectiveInsights.slice(0, 3).map((insight, i) => (
+                          <motion.div 
+                            key={i} 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 1 + i * 0.2 }}
+                            className="flex gap-4 items-start bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-primary/30 transition-all cursor-default"
+                          >
+                            <div className="mt-1.5 h-2 w-2 rounded-full bg-primary shrink-0 shadow-[0_0_10px_rgba(0,183,255,1)]" />
+                            <p className="text-[13px] font-medium leading-relaxed text-white/90 italic">"{insight}"</p>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ATTACK PATH VISUALIZATION */}
       {!showGrandmaMode && (
-        <Card className="glass-card border-white/5 rounded-[2.5rem] p-8 overflow-hidden">
-          <div className="flex items-center gap-3 mb-8">
-             <div className="p-3 bg-accent/10 rounded-2xl text-accent"><Activity className="h-6 w-6" /></div>
-             <h3 className="text-2xl font-black uppercase tracking-tighter">Story of the Scam</h3>
-          </div>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative">
-            <div className="absolute top-[24px] left-[50px] right-[50px] h-0.5 bg-gradient-to-r from-accent/50 via-primary/50 to-transparent hidden md:block -z-10" />
-            {result.timeline.map((step, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.2 }}
-                className="flex flex-col items-center text-center gap-4 flex-1 group"
-              >
-                <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 transition-all shadow-2xl z-10 ${step.status === 'completed' ? 'bg-accent border-accent text-white scale-110 shadow-accent/20' : step.status === 'active' ? 'bg-primary border-primary animate-pulse text-white scale-125 shadow-primary/20' : 'bg-card border-white/10 text-muted-foreground group-hover:border-primary/50'}`}>
-                  {i === 0 && <Users className="h-6 w-6" />}
-                  {i === 1 && <MessageSquare className="h-6 w-6" />}
-                  {i === 2 && <ShieldAlert className="h-6 w-6" />}
-                  {i === 3 && <Wallet className="h-6 w-6" />}
-                  {i > 3 && <Skull className="h-6 w-6" />}
-                </div>
-                <div className="space-y-2 px-2">
-                  <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${step.status === 'completed' ? 'text-accent' : step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>{step.label}</p>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-3 group-hover:text-white transition-colors">{step.description}</p>
-                </div>
-                {i < result.timeline.length - 1 && (
-                  <div className="md:hidden h-8 w-px bg-white/10" />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </Card>
+        <motion.div variants={itemVariants}>
+          <Card className="glass-card border-white/5 rounded-[3rem] p-12 overflow-hidden shadow-2xl">
+            <div className="flex items-center gap-4 mb-12">
+               <div className="p-4 bg-accent/10 rounded-[1.5rem] text-accent border border-accent/20"><Activity className="h-8 w-8" /></div>
+               <div>
+                 <h3 className="text-3xl font-black uppercase tracking-tighter">Story of the Scam</h3>
+                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Chronological Threat Vector Analysis</p>
+               </div>
+            </div>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-12 relative px-10">
+              <div className="absolute top-[35px] left-[100px] right-[100px] h-[3px] bg-gradient-to-r from-accent/50 via-primary/50 to-transparent hidden md:block -z-10" />
+              {result.timeline.map((step, i) => (
+                <motion.div 
+                  key={i} 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.2 }}
+                  className="flex flex-col items-center text-center gap-6 flex-1 group"
+                >
+                  <div className={`h-16 w-16 rounded-[1.5rem] flex items-center justify-center border-2 transition-all shadow-2xl z-10 ${step.status === 'completed' ? 'bg-accent border-accent text-white scale-110 shadow-accent/40' : step.status === 'active' ? 'bg-primary border-primary animate-pulse text-white scale-125 shadow-primary/40' : 'bg-card border-white/10 text-muted-foreground group-hover:border-primary/50 group-hover:scale-105'}`}>
+                    {i === 0 && <Users className="h-7 w-7" />}
+                    {i === 1 && <MessageSquare className="h-7 w-7" />}
+                    {i === 2 && <ShieldAlert className="h-7 w-7" />}
+                    {i === 3 && <Wallet className="h-7 w-7" />}
+                    {i > 3 && <Skull className="h-7 w-7" />}
+                  </div>
+                  <div className="space-y-3">
+                    <p className={`text-[12px] font-black uppercase tracking-[0.25em] ${step.status === 'completed' ? 'text-accent' : step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>{step.label}</p>
+                    <p className="text-[13px] text-muted-foreground/80 font-medium leading-relaxed max-w-[200px] group-hover:text-white transition-colors">{step.description}</p>
+                  </div>
+                  {i < result.timeline.length - 1 && (
+                    <div className="md:hidden h-12 w-0.5 bg-gradient-to-b from-primary/50 to-transparent" />
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
       )}
 
       {/* NUCLEAR PROTOCOL */}
       {result.riskLevel === 'nuclear' && (
-        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="p-10 bg-red-600/10 border-2 border-red-600 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-10 shadow-[0_0_60_px_rgba(255,0,0,0.3)]">
-          <div className="space-y-3 text-center md:text-left">
-            <h3 className="text-4xl font-black text-red-600 uppercase tracking-tighter">🚨 NUCLEAR THREAT DETECTED</h3>
-            <p className="text-lg font-medium text-white/90 max-w-lg">Nova identified a severe active attack. Execution of digital defense protocols is MANDATORY.</p>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }} 
+          animate={{ scale: 1, opacity: 1 }} 
+          className="p-12 bg-red-600/10 border-2 border-red-600 rounded-[3.5rem] flex flex-col md:flex-row items-center justify-between gap-12 shadow-[0_0_80px_rgba(255,0,0,0.4)] relative overflow-hidden"
+        >
+          <div className="scanline animate-[scan_1s_linear_infinite] opacity-50" />
+          <div className="space-y-4 text-center md:text-left relative z-10">
+            <h3 className="text-5xl font-black text-red-600 uppercase tracking-tighter leading-none">🚨 NUCLEAR THREAT DETECTED</h3>
+            <p className="text-xl font-bold text-white max-w-xl opacity-90">Nova identifies this as a high-velocity direct attack. Neutralization protocols must be executed immediately.</p>
           </div>
-          <div className="flex flex-col gap-4 w-full md:w-auto">
-            <Button className="h-16 px-10 rounded-[1.5rem] bg-red-600 text-white font-black hover:bg-red-700 gap-3 text-lg shadow-2xl">
-              <ShieldX className="h-6 w-6" /> Block & Report Now
+          <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto relative z-10">
+            <Button className="h-18 px-12 rounded-[1.5rem] bg-red-600 text-white font-black hover:bg-red-700 gap-4 text-xl shadow-2xl uppercase tracking-tighter hover:scale-105 transition-transform">
+              <ShieldX className="h-7 w-7" /> SHUT DOWN THREAT
             </Button>
-            <Button variant="outline" className="h-14 px-10 rounded-[1.5rem] border-white/20 text-white font-black hover:bg-white/5">
-              <PhoneCall className="mr-2 h-5 w-5" /> Emergency Family Call
+            <Button variant="outline" className="h-18 px-10 rounded-[1.5rem] border-white/30 text-white font-black hover:bg-white/10 text-lg uppercase tracking-tighter">
+              <PhoneCall className="mr-3 h-6 w-6" /> EMERGENCY ALERT
             </Button>
           </div>
         </motion.div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-center gap-6">
-        <Button onClick={generatePDF} size="lg" className="h-16 px-12 rounded-[2rem] btn-gradient cyber-glow text-lg font-black uppercase tracking-tighter">
-          <Download className="mr-2 h-6 w-6" /> Export Forensic Case File
+      <motion.div 
+        variants={itemVariants}
+        className="flex flex-col sm:flex-row justify-center gap-8 pt-6"
+      >
+        <Button onClick={generatePDF} size="lg" className="h-18 px-14 rounded-[2.5rem] btn-gradient cyber-glow text-xl font-black uppercase tracking-tighter hover:scale-105 transition-transform">
+          <Download className="mr-4 h-7 w-7" /> EXPORT FORENSIC FILE
         </Button>
-        <Button onClick={() => window.print()} variant="outline" className="h-16 px-12 rounded-[2rem] border-white/10 font-black">
-          <FileText className="mr-2 h-6 w-6" /> Local Archive Print
+        <Button onClick={() => window.print()} variant="outline" className="h-18 px-12 rounded-[2.5rem] border-white/10 font-black text-lg hover:bg-white/5 transition-colors">
+          <FileText className="mr-4 h-7 w-7" /> PRINT LOCAL ARCHIVE
         </Button>
-      </div>
+      </motion.div>
 
       <Dialog open={showSim} onOpenChange={setShowSim}>
-        <DialogContent className="max-w-3xl glass-card rounded-[3rem] p-0 border-white/5 overflow-hidden">
+        <DialogContent className="max-w-3xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden">
           <ScamSimulator scenario={result.simulationScenario || result.scamType} />
         </DialogContent>
       </Dialog>
 
-      <p className="text-center text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.6em] pb-10">
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.3 }}
+        transition={{ delay: 2 }}
+        className="text-center text-[11px] font-black text-muted-foreground uppercase tracking-[0.8em] pb-16 pt-10"
+      >
         "Scammers are already using AI. It's time people had AI on their side too."
-      </p>
+      </motion.p>
     </motion.div>
   );
 }
