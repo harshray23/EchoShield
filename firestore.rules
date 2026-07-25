@@ -11,7 +11,7 @@ service cloud.firestore {
     match /analyses/{analysisId} {
       // Allow read (get and list) if the document's userId matches the authenticated user
       // Queries MUST include: where('userId', '==', auth.uid)
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
       
       // Allow creation only if the authenticated user is the owner of the record
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
@@ -23,6 +23,6 @@ service cloud.firestore {
       allow update: if false;
     }
     
-    // Inert trigger for Security Rules deployment: forensic_v4_stable_fix
+    // Inert trigger for Security Rules deployment: security_patch_v6_list_resolution
   }
 }

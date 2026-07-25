@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Query,
   onSnapshot,
@@ -32,13 +33,20 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         }));
         setData(items);
         setLoading(false);
+        setError(null);
       },
       async (serverError: FirestoreError) => {
+        // Extracting path safely for error context
+        const path = (query as any)._query?.path?.toString() || 'analyses';
+        
         const permissionError = new FirestorePermissionError({
-          path: (query as any)._query?.path?.toString() || 'unknown',
+          path,
           operation: 'list',
         });
+        
+        // Emit the error for the global listener
         errorEmitter.emit('permission-error', permissionError);
+        
         setError(serverError);
         setLoading(false);
       }
