@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -9,14 +10,15 @@ export function useAnalysisHistory() {
   const { user } = useUser();
   const db = useFirestore();
 
+  // STABILIZE REFERENCES: query() must be memoized
   const historyQuery = useMemo(() => {
-    if (!user) return null;
+    if (!user?.uid || !db) return null;
     return query(
       collection(db, 'analyses'),
       where('userId', '==', user.uid),
       orderBy('timestamp', 'desc')
     );
-  }, [user, db]);
+  }, [user?.uid, db]);
 
   const { data: analyses, loading, error } = useCollection<ScamAnalysis>(historyQuery);
 

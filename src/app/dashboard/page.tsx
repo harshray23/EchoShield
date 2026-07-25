@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -32,19 +33,24 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const userRef = user ? doc(db, 'users', user.uid) : null;
+  // STABILIZE REFERENCES: doc() must be memoized to prevent useDoc loop
+  const userRef = useMemo(() => {
+    if (!user?.uid || !db) return null;
+    return doc(db, 'users', user.uid);
+  }, [user?.uid, db]);
+
   const { data: profile } = useDoc<UserProfile>(userRef as any);
 
-  // Fetch recent history for exposure analysis
+  // STABILIZE REFERENCES: query() must be memoized to prevent useCollection loop
   const historyQuery = useMemo(() => {
-    if (!user) return null;
+    if (!user?.uid || !db) return null;
     return query(
       collection(db, 'analyses'),
       where('userId', '==', user.uid),
       orderBy('timestamp', 'desc'),
       limit(20)
     );
-  }, [user, db]);
+  }, [user?.uid, db]);
 
   const { data: recentAnalyses, error: analysesError } = useCollection<ScamAnalysis>(historyQuery);
 
@@ -58,7 +64,7 @@ export default function DashboardPage() {
 
   // Calculate Scam Exposure Distribution
   const exposureStats = useMemo(() => {
-    if (!recentAnalyses) return [];
+    if (!recentAnalyses || recentAnalyses.length === 0) return [];
     const counts: Record<string, number> = {};
     recentAnalyses.forEach(a => {
       counts[a.scamCategory] = (counts[a.scamCategory] || 0) + 1;
@@ -70,8 +76,9 @@ export default function DashboardPage() {
 
   // Generate targeting insight when history changes
   useEffect(() => {
+    let isMounted = true;
     async function getInsight() {
-      if (!user || !recentAnalyses || recentAnalyses.length < 3 || targetInsight) return;
+      if (!user || !recentAnalyses || recentAnalyses.length < 3 || targetInsight || isGeneratingInsight) return;
       
       setIsGeneratingInsight(true);
       try {
@@ -85,15 +92,21 @@ export default function DashboardPage() {
           scamHistory: historyData,
           userName: user.displayName || 'Agent'
         });
-        setTargetInsight(insight);
+        
+        if (isMounted) {
+          setTargetInsight(insight);
+        }
       } catch (e) {
-        console.error("Failed to generate targeting insight", e);
+        console.warn("Forensic pattern analysis deferred", e);
       } finally {
-        setIsGeneratingInsight(false);
+        if (isMounted) {
+          setIsGeneratingInsight(false);
+        }
       }
     }
     getInsight();
-  }, [recentAnalyses, user, targetInsight]);
+    return () => { isMounted = false; };
+  }, [recentAnalyses?.length, user?.uid, targetInsight, isGeneratingInsight]);
 
   const handleAnalyze = async (type: 'text' | 'image' | 'voice' | 'document', content: string) => {
     if (!user) return;
@@ -153,7 +166,6 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Index Requirement Alert */}
       {indexLink && (
         <Alert variant="destructive" className="glass-card border-destructive/50 rounded-2xl bg-destructive/10">
           <AlertCircle className="h-5 w-5" />
@@ -162,7 +174,7 @@ export default function DashboardPage() {
             <p className="text-sm font-medium">To display your recent scan history, a composite index must be created in the Firebase Console.</p>
             <Button size="sm" variant="destructive" className="rounded-xl h-9 px-4 font-bold text-[10px] uppercase tracking-widest" asChild>
               <a href={indexLink} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-3 w-3" /> Create Required Index
+                <ExternalLink className="mr-2 h-4 w-4" /> Create Required Index
               </a>
             </Button>
           </AlertDescription>
@@ -190,7 +202,6 @@ export default function DashboardPage() {
              </div>
           </div>
 
-          {/* Scam Exposure Chart */}
           {exposureStats.length > 0 && (
             <Card className="glass-card border-white/5 rounded-[2rem] p-6">
               <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-6">
@@ -243,7 +254,6 @@ export default function DashboardPage() {
               <AnalysisLoader key="loader" />
             ) : !result ? (
               <div className="space-y-8">
-                {/* Personalized Targeting Insight */}
                 {(isGeneratingInsight || targetInsight) && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}

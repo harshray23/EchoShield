@@ -7,13 +7,19 @@ import { AnalysisDetails } from '@/components/dashboard/AnalysisDetails';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
-import { use } from 'react';
+import { use, useMemo } from 'react';
 import { ScamAnalysis } from '@/types';
 
 export default function CaseDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const db = useFirestore();
-  const docRef = doc(db, 'analyses', id);
+  
+  // STABILIZE REFERENCES: doc() must be memoized
+  const docRef = useMemo(() => {
+    if (!db || !id) return null;
+    return doc(db, 'analyses', id);
+  }, [db, id]);
+
   const { data: analysis, loading, error } = useDoc<ScamAnalysis>(docRef);
 
   if (loading) {

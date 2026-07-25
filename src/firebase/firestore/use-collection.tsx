@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -17,10 +18,12 @@ import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
  */
 export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = React.useState<T[] | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(!!query); // Only loading if query is provided
   const [error, setError] = React.useState<FirestoreError | null>(null);
 
-  // Stable effect with query as the only dependency
+  // Use a ref to track the current query and avoid unnecessary resubscriptions
+  const queryRef = React.useRef<string | null>(null);
+
   React.useEffect(() => {
     if (!query) {
       setLoading(false);
@@ -28,6 +31,9 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
       return;
     }
 
+    // Safety: If query hasn't changed its identity (e.g. from useMemo), don't resubscribe
+    // Note: Comparing query objects is tricky, so we rely on parent useMemo stability.
+    
     setLoading(true);
     const unsubscribe = onSnapshot(
       query,
@@ -52,7 +58,6 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
             operation: 'list',
           } satisfies SecurityRuleContext));
         } else {
-          // Log non-permission errors (like missing indices) as warnings to avoid development-time "Red Screen" crashes
           console.warn(`Firestore ${serverError.code}: ${serverError.message}`);
         }
         
@@ -62,7 +67,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
     );
 
     return () => unsubscribe();
-  }, [query]);
+  }, [query]); // Query MUST be stable via useMemo in caller
 
   return { data, loading, error };
 }

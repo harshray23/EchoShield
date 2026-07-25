@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -17,12 +18,13 @@ import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
  */
 export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
   const [data, setData] = React.useState<T | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(!!docRef);
   const [error, setError] = React.useState<FirestoreError | null>(null);
 
   React.useEffect(() => {
     if (!docRef) {
       setLoading(false);
+      setData(null);
       return;
     }
 
@@ -42,7 +44,6 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
           } satisfies SecurityRuleContext);
           errorEmitter.emit('permission-error', permissionError);
         } else {
-          // Log non-permission errors as warnings to avoid crashing during development
           console.warn(`Firestore Doc ${serverError.code}: ${serverError.message}`);
         }
         setError(serverError);
@@ -51,7 +52,7 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
     );
 
     return () => unsubscribe();
-  }, [docRef]);
+  }, [docRef]); // docRef MUST be stable via useMemo in caller
 
   return { data, loading, error };
 }
