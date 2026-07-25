@@ -1,28 +1,41 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useAnalysisHistory } from '@/hooks/use-analysis-history';
 import { format, isToday, isYesterday } from 'date-fns';
-import { History, ShieldAlert, Shield, ChevronRight, FileText, Image as ImageIcon, Mic, Database } from 'lucide-react';
+import { History, ShieldAlert, Shield, ChevronRight, FileText, Image as ImageIcon, Mic, Database, ExternalLink, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { extractFirestoreIndexLink } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function HistoryPage() {
-  const { analyses, loading } = useAnalysisHistory();
+  const { analyses, loading, error } = useAnalysisHistory();
 
-  const groupedAnalyses = analyses?.reduce((acc: any, analysis) => {
-    const date = analysis.timestamp?.toDate() || new Date();
-    let group = format(date, 'MMMM d, yyyy');
-    if (isToday(date)) group = 'Today';
-    else if (isYesterday(date)) group = 'Yesterday';
-    
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(analysis);
-    return acc;
-  }, {});
+  const groupedAnalyses = useMemo(() => {
+    if (!analyses) return {};
+    return analyses.reduce((acc: any, analysis) => {
+      const date = analysis.timestamp?.toDate() || new Date();
+      let group = format(date, 'MMMM d, yyyy');
+      if (isToday(date)) group = 'Today';
+      else if (isYesterday(date)) group = 'Yesterday';
+      
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(analysis);
+      return acc;
+    }, {});
+  }, [analyses]);
+
+  const indexLink = useMemo(() => {
+    if (error?.code === 'failed-precondition') {
+      return extractFirestoreIndexLink(error.message);
+    }
+    return null;
+  }, [error]);
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-10">
@@ -36,12 +49,28 @@ export default function HistoryPage() {
         <p className="text-xl text-muted-foreground font-medium">Historical database of all digital threat assessments.</p>
       </header>
 
+      {/* Index Requirement Alert */}
+      {indexLink && (
+        <Alert variant="destructive" className="glass-card border-destructive/50 rounded-[2rem] bg-destructive/10 p-8">
+          <AlertCircle className="h-8 w-8 mb-2" />
+          <AlertTitle className="font-black uppercase tracking-[0.2em] text-sm">Forensic Database Not Optimized</AlertTitle>
+          <AlertDescription className="space-y-4 pt-2">
+            <p className="text-base font-medium opacity-80">To enable chronological forensic retrieval, a composite index must be manually provisioned in your Firebase Project.</p>
+            <Button size="lg" variant="destructive" className="rounded-xl h-12 px-6 font-bold text-xs uppercase tracking-widest shadow-lg shadow-destructive/20" asChild>
+              <a href={indexLink} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-4 w-4" /> Provision Forensic Index
+              </a>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {loading ? (
         <div className="flex flex-col items-center justify-center h-96 glass-card rounded-[3rem] border-white/5">
           <Database className="h-12 w-12 text-primary animate-pulse mb-4" />
           <p className="text-[10px] font-black tracking-[0.4em] uppercase text-muted-foreground">Decrypting Secure Vault...</p>
         </div>
-      ) : !analyses || analyses.length === 0 ? (
+      ) : (!analyses || analyses.length === 0) && !indexLink ? (
         <div className="flex flex-col items-center justify-center h-96 glass-card rounded-[3rem] border-white/5 text-center p-12">
           <ShieldAlert className="h-20 w-20 text-white/5 mb-6" />
           <h3 className="text-2xl font-black uppercase tracking-tight">Archive Empty</h3>

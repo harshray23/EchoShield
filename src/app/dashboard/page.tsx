@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, ShieldAlert, Zap, Globe, TrendingUp, Search, Info, ShieldCheck, Languages, Target, Activity } from 'lucide-react';
+import { Fingerprint, ShieldAlert, Zap, Globe, TrendingUp, Search, Info, ShieldCheck, Languages, Target, Activity, ExternalLink, AlertCircle } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useCollection } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { AnalysisService } from '@/services/analysis-service';
@@ -16,6 +16,9 @@ import { analyzeTargetingPatterns, type TargetAnalysisOutput } from '@/ai/flows/
 import { doc, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { UserProfile, ScamAnalysis } from '@/types';
 import { Card } from '@/components/ui/card';
+import { extractFirestoreIndexLink } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -44,7 +47,15 @@ export default function DashboardPage() {
     );
   }, [user, db]);
 
-  const { data: recentAnalyses } = useCollection<ScamAnalysis>(historyQuery);
+  const { data: recentAnalyses, error: analysesError } = useCollection<ScamAnalysis>(historyQuery);
+
+  // Extract index link if query fails
+  const indexLink = useMemo(() => {
+    if (analysesError?.code === 'failed-precondition') {
+      return extractFirestoreIndexLink(analysesError.message);
+    }
+    return null;
+  }, [analysesError]);
 
   // Calculate Scam Exposure Distribution
   const exposureStats = useMemo(() => {
@@ -142,6 +153,22 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* Index Requirement Alert */}
+      {indexLink && (
+        <Alert variant="destructive" className="glass-card border-destructive/50 rounded-2xl bg-destructive/10">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="font-black uppercase tracking-widest text-[10px]">Database Optimization Required</AlertTitle>
+          <AlertDescription className="space-y-3 pt-2">
+            <p className="text-sm font-medium">To display your recent scan history, a composite index must be created in the Firebase Console.</p>
+            <Button size="sm" variant="destructive" className="rounded-xl h-9 px-4 font-bold text-[10px] uppercase tracking-widest" asChild>
+              <a href={indexLink} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-3 w-3" /> Create Required Index
+              </a>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
         <div className="space-y-8">

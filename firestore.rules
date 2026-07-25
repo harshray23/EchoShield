@@ -2,27 +2,24 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User Profile Protection: Users can only manage their own profile data
+    // User Profile Protocol: Strict ownership of account metadata
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Forensic Record Isolation: Users can only access their own analysis history
+    // Forensic Archive: Owner-only access for individual records and collection listing
     match /analyses/{analysisId} {
-      // Explicitly separate get and list for query optimization
-      allow get: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow list: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Unified read policy covers both 'get' and 'list' operations for the document owner
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       
-      // Allow creation only if the authenticated user is the owner of the record
+      // Creation requires authentication and ownership stamp
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       
-      // Allow deletion only by the owner
+      // Records are immutable for forensic integrity; only deletion by owner is permitted
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      
-      // Forensic integrity: Records are immutable once generated
       allow update: if false;
     }
     
-    // Deployment trigger for forensic listing fix: v9_honest_error_reporting
+    // Deployment Version Stamp: v11_final_index_resolution
   }
 }

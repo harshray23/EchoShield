@@ -44,7 +44,6 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         // Safe path extraction for debugging context
         let path = 'analyses';
         try {
-          // Attempt to extract the collection path from the query object for better debugging context
           const internalQuery = (query as any)._query || query;
           path = internalQuery.path?.segments?.join('/') || internalQuery.path?.toString() || 'analyses';
         } catch (e) {
@@ -58,10 +57,9 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
             operation: 'list',
           } satisfies SecurityRuleContext);
           
-          // Emit the error for the global listener (FirebaseErrorListener)
           errorEmitter.emit('permission-error', permissionError);
         } else {
-          // Log non-permission errors (like missing indices) for developer visibility
+          // Surfacing critical developer errors (like missing indices)
           console.error(`Firestore ${serverError.code}: ${serverError.message}`);
         }
         
