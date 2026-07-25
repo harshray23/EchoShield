@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, ShieldAlert, Loader2 } from 'lucide-react';
+import { Fingerprint, ShieldAlert } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { AnalysisService } from '@/services/analysis-service';
 import { TriageCenter } from '@/components/dashboard/TriageCenter';
 import { AnalysisDetails } from '@/components/dashboard/AnalysisDetails';
+import { AnalysisLoader } from '@/components/dashboard/AnalysisLoader';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 
 export default function DashboardPage() {
@@ -19,7 +20,7 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const handleAnalyze = async (type: 'text' | 'image' | 'voice', content: string) => {
+  const handleAnalyze = async (type: 'text' | 'image' | 'voice' | 'document', content: string) => {
     if (!user) return;
     
     setIsAnalyzing(true);
@@ -30,20 +31,24 @@ export default function DashboardPage() {
       const service = new AnalysisService(db, user.uid);
       const { analysis, warningAudio } = await service.performAnalysis({ type, content });
       
-      setResult(analysis);
-      if (warningAudio) setAudioUrl(warningAudio);
+      // Delay just a bit to let the animation finish its stages
+      setTimeout(() => {
+        setResult(analysis);
+        if (warningAudio) setAudioUrl(warningAudio);
+        setIsAnalyzing(false);
 
-      toast({
-        title: 'Analysis Complete',
-        description: `Threat level identified as ${analysis.score}% risk.`,
-      });
+        toast({
+          title: 'Analysis Complete',
+          description: `Threat level identified as ${analysis.riskScore}% risk.`,
+        });
+      }, 1000);
+
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Analysis Failed',
         description: 'Intelligence network connection timed out.',
       });
-    } finally {
       setIsAnalyzing(false);
     }
   };
@@ -63,10 +68,14 @@ export default function DashboardPage() {
 
         <div className="xl:col-span-2 space-y-8">
           <AnimatePresence mode="wait">
-            {!result ? (
+            {isAnalyzing ? (
+              <AnalysisLoader key="loader" />
+            ) : !result ? (
               <motion.div 
+                key="empty"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 className="h-[500px] flex flex-col items-center justify-center glass-card rounded-[2rem] p-12 text-center border-white/5"
               >
                 <div className="relative mb-8">
@@ -83,7 +92,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground max-w-sm mt-2">Upload suspicious media to initiate forensic triage.</p>
               </motion.div>
             ) : (
-              <AnalysisDetails result={result} audioUrl={audioUrl} />
+              <AnalysisDetails key="result" result={result} audioUrl={audioUrl} />
             )}
           </AnimatePresence>
         </div>
