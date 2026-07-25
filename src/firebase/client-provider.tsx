@@ -4,10 +4,15 @@ import React, { useMemo } from 'react';
 import { getFirebaseApp, getFirebaseAuth, getFirebaseFirestore } from './config';
 import { FirebaseProvider } from './provider';
 
+/**
+ * Client-side Firebase Provider.
+ * Ensures Firebase services are initialized exactly once in the browser.
+ */
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const { firebaseApp, firestore, auth } = useMemo(() => {
+  // useMemo ensures we don't re-initialize on every render, though getFirebaseApp is idempotent.
+  const services = useMemo(() => {
     const app = getFirebaseApp();
     return {
       firebaseApp: app,
@@ -17,7 +22,11 @@ export const FirebaseClientProvider: React.FC<{
   }, []);
 
   return (
-    <FirebaseProvider firebaseApp={firebaseApp} firestore={firestore} auth={auth}>
+    <FirebaseProvider 
+      firebaseApp={services.firebaseApp} 
+      firestore={services.firestore} 
+      auth={services.auth}
+    >
       {children}
     </FirebaseProvider>
   );

@@ -40,17 +40,13 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setError(null);
       },
       async (serverError: FirestoreError) => {
-        // Safe path extraction for debugging context
-        let path = 'analyses';
-        try {
-          const internalQuery = (query as any)._query || query;
-          path = internalQuery.path?.segments?.join('/') || internalQuery.path?.toString() || 'analyses';
-        } catch (e) {
-          path = 'analyses';
-        }
-        
-        // Only emit permission errors. Suppress crash-inducing logs for other errors (like missing indices).
+        // Suppress developer-mode crash loops for common configuration issues
         if (serverError.code === 'permission-denied') {
+          let path = 'unknown';
+          try {
+            path = (query as any)._query?.path?.toString() || 'analyses';
+          } catch (e) {}
+
           const permissionError = new FirestorePermissionError({
             path,
             operation: 'list',
@@ -58,8 +54,8 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           
           errorEmitter.emit('permission-error', permissionError);
         } else if (serverError.code === 'failed-precondition') {
-          // Log missing index warning without triggering Next.js crash overlay
-          console.warn(`Firestore Index Warning: ${serverError.message}`);
+          // Log missing index warning as a warning, not a crash-inducing error
+          console.warn(`Firestore Missing Index: ${serverError.message}`);
         }
         
         setError(serverError);

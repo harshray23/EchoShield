@@ -47,17 +47,14 @@ export default function AuthPage() {
         title: "Domain Not Authorized", 
         description: "Your security link requires domain authorization in the Firebase Console." 
       });
-    } else if (e.code === 'auth/popup-blocked') {
+    } else {
       toast({ 
         variant: "destructive", 
-        title: "Popup Blocked", 
-        description: "Authentication window blocked. Using redirect mode..." 
+        title: "Authentication Failed", 
+        description: e.message 
       });
-      signInWithRedirect(auth, new GoogleAuthProvider());
-    } else {
-      toast({ variant: "destructive", title: "Authentication Failed", description: e.message });
     }
-  }, [auth, toast]);
+  }, [toast]);
 
   const createUserProfile = useCallback(async (uid: string, email: string) => {
     const userRef = doc(db, 'users', uid);
@@ -71,8 +68,11 @@ export default function AuthPage() {
   }, [db]);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (authLoading) return;
+
+    if (user) {
       router.push('/dashboard');
+      return;
     }
 
     const checkRedirect = async () => {
@@ -80,16 +80,14 @@ export default function AuthPage() {
         const result = await getRedirectResult(auth);
         if (result?.user) {
           await createUserProfile(result.user.uid, result.user.email || '');
-          toast({ title: "Identity Verified", description: "Access granted via redirect." });
+          toast({ title: "Identity Verified", description: "Access granted." });
         }
       } catch (e: any) {
         handleAuthError(e);
       }
     };
     
-    if (!authLoading && !user) {
-      checkRedirect();
-    }
+    checkRedirect();
   }, [user, authLoading, router, auth, toast, handleAuthError, createUserProfile]);
 
   const form = useForm<z.infer<typeof authSchema>>({
@@ -102,7 +100,7 @@ export default function AuthPage() {
     setDomainError(null);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      toast({ title: "Identity Verified", description: "Access granted to the console." });
+      toast({ title: "Identity Verified", description: "Access granted." });
     } catch (e: any) {
       handleAuthError(e);
     } finally {
@@ -127,7 +125,8 @@ export default function AuthPage() {
   const onGoogleLogin = async () => {
     setDomainError(null);
     try {
-      await signInWithRedirect(auth, new GoogleAuthProvider());
+      const provider = new GoogleAuthProvider();
+      await signInWithRedirect(auth, provider);
     } catch (e: any) {
       handleAuthError(e);
     }

@@ -11,6 +11,10 @@ import {
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '../errors';
 
+/**
+ * Hook to subscribe to a Firestore document.
+ * @param docRef The DocumentReference to listen to.
+ */
 export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +42,6 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
           } satisfies SecurityRuleContext);
           errorEmitter.emit('permission-error', permissionError);
         } else {
-          // Suppress console.error to prevent Next.js dev overlay crash.
           console.warn(`Firestore Warning (${serverError.code}): ${serverError.message}`);
         }
         setError(serverError);
