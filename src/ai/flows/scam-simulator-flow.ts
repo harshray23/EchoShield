@@ -1,8 +1,11 @@
-
 'use server';
 
 /**
  * @fileOverview A safe environment to experience and learn from AI-driven scam simulations.
+ * 
+ * - continueSimulation - A server action to progress the scam simulation.
+ * - SimulationInput - Input for the simulation.
+ * - SimulationOutput - AI-generated response for the simulation.
  */
 
 import { ai } from '@/ai/genkit';
@@ -19,7 +22,8 @@ const SimulationInputSchema = z.object({
 
 const SimulationOutputSchema = z.object({
   message: z.string().describe('The scammer\'s next response.'),
-  didVictimFallForIt: z.boolean().describe('Whether the user just gave away sensitive info.'),
+  reasoning: z.string().describe('Short internal reasoning for the current simulation state.'),
+  didVictimFallForIt: z.boolean().describe('Whether the user just gave away sensitive info or performed a risky action.'),
   educationalInsight: z.string().optional().describe('Insight provided if the user falls for it or the sim ends.'),
   isEnded: z.boolean().describe('Whether the simulation has concluded.'),
 });
@@ -33,16 +37,23 @@ const simulatorPrompt = ai.definePrompt({
   output: { schema: SimulationOutputSchema },
   system: SCAM_SIMULATOR_SYSTEM_INSTRUCTION,
   prompt: `
-  Scenario: {{{scenario}}}
+  Scenario Context: {{{scenario}}}
   
-  Current Conversation History:
+  --- CONVERSATION HISTORY ---
+  {{#if history}}
   {{#each history}}
   - {{role}}: {{content}}
   {{/each}}
+  {{else}}
+  (No history yet. This is the start of the simulation.)
+  {{/if}}
   
   TASK:
-  Continue the simulation based on the guidelines in your system prompt. 
-  If this is the first message (history is empty), introduce yourself as the relevant entity (e.g., Bank Manager, FedEx agent) and start the hook.
+  Continue the simulation. 
+  1. If history is empty: Start the scam by introducing yourself according to the scenario (e.g., "This is FedEx calling...").
+  2. If history exists: Respond to the user's last message, applying psychological pressure.
+  3. Evaluate if the user has "fallen" for the scam (e.g., by providing an OTP, clicking a link, or agreeing to a suspicious request).
+  4. End the simulation if the user is compromised or if they have clearly identified and neutralized the threat.
   `,
 });
 
@@ -59,6 +70,9 @@ const simulatorFlow = ai.defineFlow(
   }
 );
 
+/**
+ * Server action to interact with the scam simulator.
+ */
 export async function continueSimulation(input: SimulationInput): Promise<SimulationOutput> {
   return simulatorFlow(input);
 }

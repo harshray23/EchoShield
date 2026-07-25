@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Ghost, Send, AlertTriangle, CheckCircle, ShieldAlert, Brain, Loader2 } from 'lucide-react';
+import { Ghost, Send, AlertTriangle, CheckCircle, ShieldAlert, Brain, Loader2, RefreshCw } from 'lucide-react';
 import { continueSimulation, type SimulationOutput } from '@/ai/flows/scam-simulator-flow';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,28 +28,28 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const startSim = async () => {
+    setLoading(true);
+    setIsEnded(false);
+    setResult(null);
+    setMessages([]);
+    try {
+      const res = await continueSimulation({ scenario, history: [] });
+      setMessages([{ role: 'model', content: res.message }]);
+    } catch (e) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Simulator Link Failed',
+        description: 'Nova could not establish the adversary connection. Retrying...' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    const startSim = async () => {
-      setLoading(true);
-      try {
-        const res = await continueSimulation({ scenario, history: [] });
-        if (isMounted) {
-          setMessages([{ role: 'model', content: res.message }]);
-        }
-      } catch (e) {
-        if (isMounted) {
-          toast({ variant: 'destructive', title: 'Simulator Link Failed' });
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
     startSim();
-    return () => { isMounted = false; };
-  }, [scenario, toast]);
+  }, [scenario]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -62,20 +61,24 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
     if (!input.trim() || loading || isEnded) return;
 
     const userMsg = input.trim();
-    const newMessages: Message[] = [...messages, { role: 'user', content: userMsg }];
-    setMessages(newMessages);
+    const currentHistory: Message[] = [...messages, { role: 'user', content: userMsg }];
+    setMessages(currentHistory);
     setInput('');
     setLoading(true);
 
     try {
-      const res = await continueSimulation({ scenario, history: newMessages });
-      setMessages([...newMessages, { role: 'model', content: res.message }]);
+      const res = await continueSimulation({ scenario, history: currentHistory });
+      setMessages([...currentHistory, { role: 'model', content: res.message }]);
       if (res.isEnded) {
         setIsEnded(true);
         setResult(res);
       }
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Simulator Desync' });
+      toast({ 
+        variant: 'destructive', 
+        title: 'Simulator Desync',
+        description: 'The simulation link was interrupted. Check your network.'
+      });
     } finally {
       setLoading(false);
     }
@@ -87,15 +90,18 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
         <CardHeader className="bg-white/5 border-b border-white/5 p-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-xl text-primary"><Ghost className="h-5 w-5" /></div>
-            <div>
+            <div className="flex-1">
               <CardTitle className="text-lg font-black uppercase tracking-tighter">Live Scam Simulation</CardTitle>
               <CardDescription className="text-[10px] font-black tracking-widest uppercase">Safe Forensic Environment</CardDescription>
             </div>
             {isEnded && (
-              <div className={`ml-auto px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${result?.didVictimFallForIt ? 'bg-destructive/20 text-destructive' : 'bg-accent/20 text-accent'}`}>
-                {result?.didVictimFallForIt ? 'User Trapped' : 'Threat Defused'}
+              <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${result?.didVictimFallForIt ? 'bg-destructive/20 text-destructive' : 'bg-accent/20 text-accent'}`}>
+                {result?.didVictimFallForIt ? 'User Compromised' : 'Threat Blocked'}
               </div>
             )}
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={startSim} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </CardHeader>
         
@@ -103,7 +109,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-4">
               <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl mb-8">
-                <p className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Simulation Context</p>
+                <p className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Active Threat Scenario</p>
                 <p className="text-sm font-medium italic opacity-70">"{scenario}"</p>
               </div>
 
@@ -114,14 +120,14 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-medium ${m.role === 'user' ? 'bg-primary text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none border border-white/5'}`}>
+                  <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-medium ${m.role === 'user' ? 'bg-primary text-white rounded-tr-none shadow-lg' : 'bg-white/10 text-white rounded-tl-none border border-white/5 shadow-md'}`}>
                     {m.content}
                   </div>
                 </motion.div>
               ))}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-white/5 p-4 rounded-2xl rounded-tl-none animate-pulse">
+                  <div className="bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   </div>
                 </div>
@@ -140,13 +146,13 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
                 <div className="flex items-center gap-3">
                   {result.didVictimFallForIt ? <ShieldAlert className="h-6 w-6 text-destructive" /> : <CheckCircle className="h-6 w-6 text-accent" />}
                   <h4 className="font-black uppercase tracking-tighter">
-                    {result.didVictimFallForIt ? 'Simulation Result: Critical Failure' : 'Simulation Result: Threat Defused'}
+                    {result.didVictimFallForIt ? 'Simulation Result: Critical Security Breach' : 'Simulation Result: Threat Deflected'}
                   </h4>
                 </div>
-                <p className="text-sm font-medium leading-relaxed italic">
-                  {result.educationalInsight || (result.didVictimFallForIt ? "You shared sensitive information. In a real scenario, your account would be compromised now." : "You successfully identified the red flags.")}
+                <p className="text-sm font-medium leading-relaxed italic opacity-90">
+                  {result.educationalInsight || (result.didVictimFallForIt ? "The simulation has ended because sensitive information was exposed. In a real scenario, your assets would now be at risk." : "Great work. You maintained your guard and identified the manipulation cues.")}
                 </p>
-                <Button onClick={() => window.location.reload()} variant="outline" className="w-full rounded-xl border-white/10 font-black uppercase text-[10px] tracking-widest">Reset Protocol</Button>
+                <Button onClick={startSim} variant="outline" className="w-full rounded-xl border-white/10 font-black uppercase text-[10px] tracking-widest h-12">Initialize New Protocol</Button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -154,14 +160,14 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
           {!isEnded && (
             <div className="p-4 bg-white/5 border-t border-white/5 flex gap-2">
               <Input
-                placeholder="Type your response..."
-                className="bg-white/5 border-white/10 rounded-xl"
+                placeholder="Type your response to the threat..."
+                className="bg-white/5 border-white/10 rounded-xl h-12"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 disabled={loading}
               />
-              <Button onClick={handleSend} disabled={loading || !input.trim()} className="rounded-xl btn-gradient">
+              <Button onClick={handleSend} disabled={loading || !input.trim()} className="h-12 w-12 rounded-xl btn-gradient">
                 <Send className="h-4 w-4" />
               </Button>
             </div>
@@ -169,7 +175,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
         </CardContent>
       </Card>
       <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground opacity-50">
-        <Brain className="h-3 w-3" /> Nova Learning Environment
+        <Brain className="h-3 w-3" /> Nova Security Training Environment
       </div>
     </div>
   );

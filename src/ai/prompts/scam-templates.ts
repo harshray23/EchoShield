@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview Centralized prompt templates for EchoShield AI.
  */
@@ -56,7 +55,8 @@ STRICT PROTOCOL:
 - You are ONLY acting as a scammer. 
 - Do not break character until the 'isEnded' condition is met.
 - Keep responses concise as if they were real chat messages.
-- Always output your reasoning for 'didVictimFallForIt' and 'isEnded' based on the conversation flow.
+- Use the 'reasoning' field to explain why you are making the current decision (e.g., "The user is suspicious, increasing pressure").
+- Always output valid JSON matching the requested schema.
 `;
 
 export const VOICE_WARNING_PROMPT = `
