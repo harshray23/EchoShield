@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAuth, useUser, useFirestore } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -14,7 +14,7 @@ import {
   GoogleAuthProvider,
   signInAnonymously 
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getFirestore } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,11 +34,11 @@ export default function AuthPage() {
   const [domainError, setDomainError] = useState<string | null>(null);
   const router = useRouter();
   const auth = useAuth();
-  const db = useFirestore();
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
 
   const handleAuthError = useCallback((e: any) => {
+    console.error("Auth Error:", e);
     if (e.code === 'auth/unauthorized-domain') {
       const domain = typeof window !== 'undefined' ? window.location.hostname : '';
       setDomainError(domain);
@@ -52,6 +52,7 @@ export default function AuthPage() {
   }, [toast]);
 
   const createUserProfile = useCallback(async (uid: string, email: string) => {
+    const db = getFirestore();
     const userRef = doc(db, 'users', uid);
     await setDoc(userRef, {
       email,
@@ -60,9 +61,9 @@ export default function AuthPage() {
       updatedAt: serverTimestamp(),
       userId: uid
     }, { merge: true });
-  }, [db]);
+  }, []);
 
-  // Handle redirect result and navigation
+  // Handle Auth Redirect Result
   useEffect(() => {
     if (authLoading) return;
 
@@ -119,6 +120,7 @@ export default function AuthPage() {
     setDomainError(null);
     try {
       const provider = new GoogleAuthProvider();
+      // Using Redirect for better compatibility in workstation/iframe environments
       await signInWithRedirect(auth, provider);
     } catch (e: any) {
       handleAuthError(e);
