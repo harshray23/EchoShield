@@ -24,6 +24,7 @@ const AnalyzeScamOutputSchema = z.object({
   grandmaExplanation: z.string(),
   personalizedWarning: z.string(),
   targetReason: z.string().describe('Why this specific user was targeted based on context'),
+  simulationScenario: z.string().describe('A 1-sentence scenario to seed a educational simulator.'),
   scamDNA: z.object({
     emotion: z.number().describe('0-100'),
     urgency: z.number().describe('0-100'),
@@ -69,7 +70,7 @@ const analyzePrompt = ai.definePrompt({
   prompt: `
   Analyze the provided {{type}} content for security threats in {{language}}.
   
-  {{#if userName}}User Name: {{userName}}{{if}}{{/if}}
+  {{#if userName}}User Name: {{userName}}{{/if}}
   
   Context Type: {{type}}
   
@@ -96,6 +97,7 @@ const analyzePrompt = ai.definePrompt({
   3. NUCLEAR THREAT: If the risk is extreme (direct theft, high pressure), set riskLevel to 'nuclear' and trustLabel to 'NUCLEAR ☠️'.
   4. AI X-RAY: Identify specific phrases in the content and explain why they are red flags in the 'highlights' field.
   5. GRANDMA MODE: One simple takeaway sentence.
+  6. SIMULATION SCENARIO: Provide a realistic prompt for an AI scam simulator based on this specific threat.
   `,
 });
 

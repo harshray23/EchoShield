@@ -3,3 +3,4 @@ import './flows/analyze-scam-flow';
 import './flows/voice-warning-flow';
 import './flows/ocr-flow';
 import './flows/target-analysis-flow';
+import './flows/scam-simulator-flow';

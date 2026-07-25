@@ -65,13 +65,5 @@ export interface ScamAnalysis {
   metadata?: Record<string, any>;
   safetyScoreEarned: number;
   targetReason?: string;
-}
-
-export interface UserProfile {
-  uid: string;
-  email: string;
-  displayName?: string;
-  photoURL?: string;
-  safetyScore: number;
-  lastAnalysisAt?: any;
+  simulationScenario: string;
 }

@@ -10,13 +10,15 @@ import {
   AlertTriangle, CheckCircle2, Volume2, Download, ShieldAlert, Zap, Info, MessageSquare, 
   ExternalLink, Key, Wallet, BrainCircuit, ShieldCheck, CheckCircle, FileSearch, FileText,
   Heart, Users, Share2, ShieldX, PhoneCall, Copy, Ghost, Sparkles, Search, Languages,
-  Fingerprint, Skull, ArrowRight, Activity, Eye, Shield
+  Fingerprint, Skull, ArrowRight, Activity, Eye, Shield, Play
 } from 'lucide-react';
 import { RiskMeter } from './RiskMeter';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ScamSimulator } from './ScamSimulator';
 
 interface AnalysisDetailsProps {
   result: AnalyzeScamOutput;
@@ -26,6 +28,7 @@ interface AnalysisDetailsProps {
 
 export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsProps) {
   const [showGrandmaMode, setShowGrandmaMode] = useState(false);
+  const [showSim, setShowSim] = useState(false);
   const { toast } = useToast();
 
   const trustColors: Record<string, string> = {
@@ -103,6 +106,9 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
                 >
                   <Heart className="mr-2 h-5 w-5" /> {showGrandmaMode ? 'Exit Grandma Mode' : 'Explain Simply'}
                 </Button>
+                <Button onClick={() => setShowSim(true)} variant="outline" className="rounded-2xl border-primary/30 h-14 px-8 font-black text-primary hover:bg-primary hover:text-white transition-all cyber-glow">
+                  <Play className="mr-2 h-5 w-5" /> Experience Scam safely
+                </Button>
                 <Button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`🚨 EchoShield AI detected a threat: ${result.scamType}. Check it out!`)}`, '_blank')} variant="outline" className="rounded-2xl border-white/10 h-14 px-6">
                   <Share2 className="mr-2 h-5 w-5" /> Share Security Alert
                 </Button>
@@ -173,23 +179,36 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
 
       {/* ATTACK PATH VISUALIZATION */}
       {!showGrandmaMode && (
-        <Card className="glass-card border-white/5 rounded-[2.5rem] p-8">
+        <Card className="glass-card border-white/5 rounded-[2.5rem] p-8 overflow-hidden">
           <div className="flex items-center gap-3 mb-8">
              <div className="p-3 bg-accent/10 rounded-2xl text-accent"><Activity className="h-6 w-6" /></div>
-             <h3 className="text-2xl font-black uppercase tracking-tighter">Attack Progression Path</h3>
+             <h3 className="text-2xl font-black uppercase tracking-tighter">Story of the Scam</h3>
           </div>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative">
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-white/10 hidden md:block -z-10" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative">
+            <div className="absolute top-[24px] left-[50px] right-[50px] h-0.5 bg-gradient-to-r from-accent/50 via-primary/50 to-transparent hidden md:block -z-10" />
             {result.timeline.map((step, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-3 flex-1">
-                <div className={`h-12 w-12 rounded-full flex items-center justify-center border-2 transition-all shadow-xl ${step.status === 'completed' ? 'bg-accent border-accent text-white' : step.status === 'active' ? 'bg-primary border-primary animate-pulse text-white' : 'bg-card border-white/10 text-muted-foreground'}`}>
-                  {i + 1}
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.2 }}
+                className="flex flex-col items-center text-center gap-4 flex-1 group"
+              >
+                <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 transition-all shadow-2xl z-10 ${step.status === 'completed' ? 'bg-accent border-accent text-white scale-110 shadow-accent/20' : step.status === 'active' ? 'bg-primary border-primary animate-pulse text-white scale-125 shadow-primary/20' : 'bg-card border-white/10 text-muted-foreground group-hover:border-primary/50'}`}>
+                  {i === 0 && <Users className="h-6 w-6" />}
+                  {i === 1 && <MessageSquare className="h-6 w-6" />}
+                  {i === 2 && <ShieldAlert className="h-6 w-6" />}
+                  {i === 3 && <Wallet className="h-6 w-6" />}
+                  {i > 3 && <Skull className="h-6 w-6" />}
                 </div>
-                <div className="space-y-1 px-4">
-                  <p className={`text-xs font-black uppercase tracking-tight ${step.status === 'completed' ? 'text-accent' : step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>{step.label}</p>
-                  <p className="text-[10px] text-muted-foreground font-medium leading-tight line-clamp-2">{step.description}</p>
+                <div className="space-y-2 px-2">
+                  <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${step.status === 'completed' ? 'text-accent' : step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>{step.label}</p>
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-3 group-hover:text-white transition-colors">{step.description}</p>
                 </div>
-              </div>
+                {i < result.timeline.length - 1 && (
+                  <div className="md:hidden h-8 w-px bg-white/10" />
+                )}
+              </motion.div>
             ))}
           </div>
         </Card>
@@ -246,6 +265,12 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
           <FileText className="mr-2 h-6 w-6" /> Local Archive Print
         </Button>
       </div>
+
+      <Dialog open={showSim} onOpenChange={setShowSim}>
+        <DialogContent className="max-w-3xl glass-card rounded-[3rem] p-0 border-white/5 overflow-hidden">
+          <ScamSimulator scenario={result.simulationScenario || result.scamType} />
+        </DialogContent>
+      </Dialog>
 
       <p className="text-center text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.6em] pb-10">
         "Scammers are already using AI. It's time people had AI on their side too."
