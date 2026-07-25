@@ -45,7 +45,6 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         let path = 'analyses';
         try {
           // Attempt to extract the collection path from the query object for better debugging context
-          // This uses internal properties that may change between SDK versions, hence the try-catch
           const internalQuery = (query as any)._query || query;
           path = internalQuery.path?.segments?.join('/') || internalQuery.path?.toString() || 'analyses';
         } catch (e) {
@@ -58,7 +57,6 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         } satisfies SecurityRuleContext);
         
         // Emit the error for the global listener (FirebaseErrorListener)
-        // In development, this triggers the Next.js error overlay with rich context
         errorEmitter.emit('permission-error', permissionError);
         
         setError(serverError);
