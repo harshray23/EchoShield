@@ -31,11 +31,26 @@ const SimulationOutputSchema = z.object({
 export type SimulationInput = z.infer<typeof SimulationInputSchema>;
 export type SimulationOutput = z.infer<typeof SimulationOutputSchema>;
 
+/**
+ * Define the simulator prompt with safety settings to allow educational role-play.
+ */
 const simulatorPrompt = ai.definePrompt({
   name: 'simulatorPrompt',
   input: { schema: SimulationInputSchema },
   output: { schema: SimulationOutputSchema },
   system: SCAM_SIMULATOR_SYSTEM_INSTRUCTION,
+  config: {
+    safetySettings: [
+      {
+        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_NONE',
+      }
+    ],
+  },
   prompt: `
   Scenario Context: {{{scenario}}}
   
@@ -57,6 +72,9 @@ const simulatorPrompt = ai.definePrompt({
   `,
 });
 
+/**
+ * Define the Genkit flow for the simulator.
+ */
 const simulatorFlow = ai.defineFlow(
   {
     name: 'simulatorFlow',
@@ -65,13 +83,14 @@ const simulatorFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await simulatorPrompt(input);
-    if (!output) throw new Error('Simulation link unstable');
+    if (!output) throw new Error('Simulation link unstable - possibly blocked or malformed output');
     return output;
   }
 );
 
 /**
  * Server action to interact with the scam simulator.
+ * This is exported at the bottom to ensure all constants are initialized first.
  */
 export async function continueSimulation(input: SimulationInput): Promise<SimulationOutput> {
   return simulatorFlow(input);
