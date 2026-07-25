@@ -25,6 +25,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
   const [loading, setLoading] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
   const [result, setResult] = useState<SimulationOutput | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -33,14 +34,17 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
     setIsEnded(false);
     setResult(null);
     setMessages([]);
+    setError(null);
     try {
       const res = await continueSimulation({ scenario, history: [] });
       setMessages([{ role: 'model', content: res.message }]);
-    } catch (e) {
+    } catch (e: any) {
+      const errorMsg = e.message || 'Nova could not establish the adversary connection.';
+      setError(errorMsg);
       toast({ 
         variant: 'destructive', 
         title: 'Simulator Link Failed',
-        description: 'Nova could not establish the adversary connection. Retrying...' 
+        description: errorMsg 
       });
     } finally {
       setLoading(false);
@@ -65,6 +69,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
     setMessages(currentHistory);
     setInput('');
     setLoading(true);
+    setError(null);
 
     try {
       const res = await continueSimulation({ scenario, history: currentHistory });
@@ -73,11 +78,11 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
         setIsEnded(true);
         setResult(res);
       }
-    } catch (e) {
+    } catch (e: any) {
       toast({ 
         variant: 'destructive', 
         title: 'Simulator Desync',
-        description: 'The simulation link was interrupted. Check your network.'
+        description: e.message || 'The simulation link was interrupted.'
       });
     } finally {
       setLoading(false);
@@ -112,6 +117,16 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
                 <p className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Active Threat Scenario</p>
                 <p className="text-sm font-medium italic opacity-70">"{scenario}"</p>
               </div>
+
+              {error && (
+                <div className="p-8 text-center space-y-4">
+                  <ShieldAlert className="h-12 w-12 text-destructive mx-auto opacity-50" />
+                  <p className="text-sm font-bold text-destructive/80 uppercase tracking-widest">{error}</p>
+                  <Button onClick={startSim} variant="outline" className="rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10">
+                    Retry Intelligence Link
+                  </Button>
+                </div>
+              )}
 
               {messages.map((m, i) => (
                 <motion.div
@@ -157,7 +172,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
             )}
           </AnimatePresence>
 
-          {!isEnded && (
+          {!isEnded && !error && (
             <div className="p-4 bg-white/5 border-t border-white/5 flex gap-2">
               <Input
                 placeholder="Type your response to the threat..."

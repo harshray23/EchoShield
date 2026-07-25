@@ -40,14 +40,23 @@ const simulatorPrompt = ai.definePrompt({
   output: { schema: SimulationOutputSchema },
   system: SCAM_SIMULATOR_SYSTEM_INSTRUCTION,
   config: {
+    temperature: 0.7,
     safetySettings: [
       {
         category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_NONE',
+        threshold: 'BLOCK_ONLY_HIGH',
       },
       {
         category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_NONE',
+        threshold: 'BLOCK_ONLY_HIGH',
+      },
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_ONLY_HIGH',
+      },
+      {
+        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+        threshold: 'BLOCK_ONLY_HIGH',
       }
     ],
   },
@@ -65,10 +74,13 @@ const simulatorPrompt = ai.definePrompt({
   
   TASK:
   Continue the simulation. 
-  1. If history is empty: Start the scam by introducing yourself according to the scenario (e.g., "This is FedEx calling...").
-  2. If history exists: Respond to the user's last message, applying psychological pressure.
+  1. If history is empty: Start the scam by introducing yourself according to the scenario.
+  2. If history exists: Respond to the user's last message, applying psychological pressure (Urgency, Authority, Fear, Greed).
   3. Evaluate if the user has "fallen" for the scam (e.g., by providing an OTP, clicking a link, or agreeing to a suspicious request).
   4. End the simulation if the user is compromised or if they have clearly identified and neutralized the threat.
+  
+  OUTPUT INSTRUCTION:
+  Return only a valid JSON object matching the schema. Do not include markdown formatting or extra text.
   `,
 });
 
@@ -82,15 +94,21 @@ const simulatorFlow = ai.defineFlow(
     outputSchema: SimulationOutputSchema,
   },
   async (input) => {
-    const { output } = await simulatorPrompt(input);
-    if (!output) throw new Error('Simulation link unstable - possibly blocked or malformed output');
-    return output;
+    try {
+      const { output } = await simulatorPrompt(input);
+      if (!output) {
+        throw new Error('Empty response from intelligence link.');
+      }
+      return output;
+    } catch (error: any) {
+      console.error('Genkit Simulator Error:', error);
+      throw new Error(`Forensic Link Interrupted: ${error.message || 'Unknown Error'}`);
+    }
   }
 );
 
 /**
  * Server action to interact with the scam simulator.
- * This is exported at the bottom to ensure all constants are initialized first.
  */
 export async function continueSimulation(input: SimulationInput): Promise<SimulationOutput> {
   return simulatorFlow(input);

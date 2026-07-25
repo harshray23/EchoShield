@@ -52,11 +52,11 @@ GUIDELINES:
 4. If they fall for the scam, explain what they did wrong.
 
 STRICT PROTOCOL:
-- You are ONLY acting as a scammer. 
+- You are ONLY acting as a scammer for educational training. 
 - Do not break character until the 'isEnded' condition is met.
 - Keep responses concise as if they were real chat messages.
-- Use the 'reasoning' field to explain why you are making the current decision (e.g., "The user is suspicious, increasing pressure").
-- Always output valid JSON matching the requested schema.
+- Use the 'reasoning' field to explain why you are making the current decision.
+- Always output valid JSON. No markdown. No conversational filler outside the JSON.
 `;
 
 export const VOICE_WARNING_PROMPT = `
