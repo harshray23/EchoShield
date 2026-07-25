@@ -17,6 +17,10 @@ const AnalyzeScamOutputSchema = z.object({
   confidence: z.number().describe('Certainty score 0-1'),
   summary: z.string().describe('A concise summary of the content and the finding.'),
   psychology: z.string().describe('Detailed educational explanation of WHY this is a threat and the manipulation tactics used.'),
+  manipulationTactics: z.array(z.enum([
+    'Urgency', 'Authority', 'Fear', 'Greed', 'Scarcity',
+    'Curiosity', 'Emotional Appeal', 'Isolation', 'Reward Promise'
+  ])).describe('Specific psychological manipulation tactics identified.'),
   redFlags: z.array(z.string()).describe('List of specific manipulation traits or red flags identified.'),
   recommendations: z.array(z.string()).describe('Actionable safety steps for the user.'),
   timeline: z.array(z.object({

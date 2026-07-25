@@ -1,7 +1,5 @@
 /**
  * @fileOverview Centralized prompt templates for EchoShield AI.
- * This file contains modular system instructions and prompt templates
- * to keep AI behavioral logic isolated and easy to update.
  */
 
 export const SCAM_DETECTION_SYSTEM_INSTRUCTION = `
@@ -16,15 +14,21 @@ Analyze content for:
 - Requests for sensitive data (OTPs, passwords, KYC documents)
 - Requests for unconventional payments (Gift cards, Crypto, off-platform transfers)
 
+PSYCHOLOGY PANEL DIRECTIVE:
+Identify which of these specific manipulation tactics are present:
+- Urgency: Creating a time-limited pressure.
+- Authority: Impersonating figures of power (police, bank, boss).
+- Fear: Using threats of negative consequences.
+- Greed: Promising unearned wealth or prizes.
+- Scarcity: Implying limited availability of an offer.
+- Curiosity: Using intrigue to force a click.
+- Emotional Appeal: Exploiting empathy or family bonds.
+- Isolation: Trying to keep the user from talking to others.
+- Reward Promise: Promising a specific benefit for an action.
+
 BE CRITICAL:
 - If the risk is low, explain why it appears safe but advise caution.
 - If the risk is high, name the specific scam type (e.g., "The Pig Butchering Scam", "Grandparent Scam").
-- Always provide a clear, actionable checklist.
-
-STORYTELLING DIRECTIVE:
-Generate a "Scam Progression Timeline". This should reflect the lifecycle of this specific threat.
-Common steps to map: Message Received -> Link Opened -> OTP Requested -> Money Requested -> Risk Detected.
-Adjust the steps based on the actual content provided. Use the following icon types: message, link, otp, money, risk.
 `;
 
 export const SCAM_ANALYSIS_PROMPT = `
@@ -38,33 +42,27 @@ Chat/Text Content: """{{{content}}}"""
 
 {{#if (eq type "image")}}
 Visual Forensic Analysis:
-Examine this screenshot for visual red flags, manipulated UI elements, or brand impersonation: {{media url=content}}
+Examine this screenshot for visual red flags: {{media url=content}}
 
 Extracted Forensic OCR Text:
 """
 {{{ocrText}}}
 """
-
-Use the extracted OCR text as the primary evidence for phishing links, grammar inconsistencies, and manipulative language.
 {{/if}}
 
 {{#if (eq type "voice")}}
-(Audio Processing) Analyze speech patterns and high-pressure tactics in this audio: {{media url=content}}
+Analyze speech patterns in this audio: {{media url=content}}
 {{/if}}
 
 {{#if (eq type "document")}}
-Forensically examine this document (PDF/DOCX/TXT) for phishing, fraudulent terms, or suspicious requests: {{media url=content}}
+Forensically examine this document: {{media url=content}}
 {{/if}}
 
 Educational Directive:
-Explain WHY this is a threat. Use terms like "Sense of Urgency," "Trust Building," or "Credential Harvesting."
-
-Output a chronological timeline of 4-6 steps detailing the scam progression from inception to the final detected risk.
+Explain WHY this is a threat. Populate the 'manipulationTactics' field based on the presence of Urgency, Authority, Fear, Greed, Scarcity, Curiosity, Emotional Appeal, Isolation, or Reward Promise.
 `;
 
 export const VOICE_WARNING_PROMPT = `
-Narrate the following security warning in a professional, protective, and firm tone. 
-The goal is to stop the user from taking a dangerous action immediately.
-
+Narrate the following security warning in a professional, protective, and firm tone.
 Warning Text: {{{text}}}
 `;

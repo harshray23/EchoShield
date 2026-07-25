@@ -1,5 +1,16 @@
 export type AnalysisType = 'text' | 'image' | 'voice' | 'document';
 
+export type ManipulationTactic = 
+  | 'Urgency' 
+  | 'Authority' 
+  | 'Fear' 
+  | 'Greed' 
+  | 'Scarcity' 
+  | 'Curiosity' 
+  | 'Emotional Appeal' 
+  | 'Isolation' 
+  | 'Reward Promise';
+
 export interface TimelineStep {
   label: string;
   description: string;
@@ -18,6 +29,7 @@ export interface ScamAnalysis {
   summary: string;
   redFlags: string[];
   psychology: string;
+  manipulationTactics: ManipulationTactic[];
   recommendations: string[];
   timeline: TimelineStep[];
   timestamp: any; // Firestore Timestamp

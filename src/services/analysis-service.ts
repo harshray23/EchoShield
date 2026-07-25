@@ -14,7 +14,6 @@ export class AnalysisService {
   async performAnalysis(input: { type: 'text' | 'image' | 'voice' | 'document'; content: string }): Promise<{ analysis: AnalyzeScamOutput; warningAudio?: string }> {
     let ocrText: string | undefined;
 
-    // 1. Mandatory OCR step for images
     if (input.type === 'image') {
       try {
         ocrText = await extractTextFromImage(input.content);
@@ -23,14 +22,12 @@ export class AnalysisService {
       }
     }
 
-    // 2. Run AI Analysis with potential OCR text
     const analysis = await analyzeScam({
       type: input.type,
       content: input.content,
       ocrText,
     });
 
-    // 3. Persist to Firestore (Non-blocking)
     const analysisData: Omit<ScamAnalysis, 'id'> = {
       userId: this.userId,
       type: input.type,
@@ -41,6 +38,7 @@ export class AnalysisService {
       summary: analysis.summary,
       redFlags: analysis.redFlags,
       psychology: analysis.psychology,
+      manipulationTactics: analysis.manipulationTactics,
       recommendations: analysis.recommendations,
       timeline: analysis.timeline,
       timestamp: serverTimestamp(),
@@ -56,7 +54,6 @@ export class AnalysisService {
       errorEmitter.emit('permission-error', permissionError);
     });
 
-    // 4. Generate Voice Warning if high risk
     let warningAudio: string | undefined;
     if (analysis.riskScore > 40) {
       warningAudio = await generateVoiceWarning(analysis.scamType);
