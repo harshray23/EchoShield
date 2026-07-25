@@ -2,16 +2,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User Profile Protection: Users can only manage their own profile
+    // User Profile Protection: Users can only manage their own profile data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Analysis History Isolation: Users can only read and write their own forensic data
+    // Forensic Record Isolation: Users can only access their own analysis history
+    // This rule allows 'list' operations only if the query is filtered by userId == auth.uid
     match /analyses/{analysisId} {
-      allow read, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if false; // Forensic records are immutable once generated
+      // Allow read (get and list) if the document's userId matches the authenticated user
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Allow creation only if the authenticated user is the owner of the record
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Allow deletion only by the owner
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Forensic integrity: Records are immutable once generated to maintain chain of custody
+      allow update: if false;
     }
+    
+    // Inert trigger for Security Rules deployment: forensic_v2_stable
   }
 }

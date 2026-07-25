@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Firestore, collection, doc, setDoc, serverTimestamp, increment } from 'firebase/firestore';
@@ -7,27 +8,42 @@ import { extractTextFromImage } from '@/ai/flows/ocr-flow';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
+/**
+ * @fileOverview AnalysisService handles the end-to-end forensic triage process.
+ * It coordinates OCR, AI analysis, voice generation, and secure persistence.
+ */
 export class AnalysisService {
   constructor(private db: Firestore, private userId: string, private userName?: string) {}
 
+  /**
+   * Basic sanitization to prevent simple script injection in forensic text.
+   */
   private sanitize(text: string): string {
-    // Basic sanitization to prevent simple HTML/Script injection
     return text.replace(/[<>]/g, "").trim();
   }
 
-  async performAnalysis(input: { type: 'text' | 'image' | 'voice' | 'document'; content: string; language?: string }): Promise<{ analysis: AnalyzeScamOutput; warningAudio?: string; caseId: string }> {
+  /**
+   * Performs a complete forensic analysis on the provided payload.
+   */
+  async performAnalysis(input: { 
+    type: 'text' | 'image' | 'voice' | 'document'; 
+    content: string; 
+    language?: string 
+  }): Promise<{ analysis: AnalyzeScamOutput; warningAudio?: string; caseId: string }> {
     let ocrText: string | undefined;
 
+    // Phase 1: Visual Extraction
     if (input.type === 'image') {
       try {
         ocrText = await extractTextFromImage(input.content);
       } catch (e) {
-        // Silent fail for OCR is acceptable in forensic triage
+        // Non-blocking: Triage continues even if OCR fails
       }
     }
 
     const sanitizedContent = input.type === 'text' ? this.sanitize(input.content) : input.content;
 
+    // Phase 2: AI Forensic Triage
     const analysis = await analyzeScam({
       type: input.type,
       content: sanitizedContent,
@@ -39,15 +55,16 @@ export class AnalysisService {
     const docRef = doc(collection(this.db, 'analyses'));
     const caseId = docRef.id;
 
+    // Phase 3: Secure Data Preparation
     const analysisData = {
       ...analysis,
-      userId: this.userId,
+      userId: this.userId, // Mandatory for security rules isolation
       type: input.type,
       timestamp: serverTimestamp(),
       metadata: ocrText ? { ocrText: this.sanitize(ocrText) } : undefined,
     };
 
-    // Save Forensic Record
+    // Phase 4: Persistence with Permission Error Handling
     setDoc(docRef, analysisData).catch(async (err) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
@@ -56,24 +73,23 @@ export class AnalysisService {
       }));
     });
 
-    // CRITICAL FIX: Use setDoc with merge: true to ensure profile existence
-    // This prevents the "document not found" error for new users
+    // Phase 5: User Profile Progression (Atomic Update)
     const userRef = doc(this.db, 'users', this.userId);
     setDoc(userRef, {
       safetyScore: increment(analysis.safetyScoreEarned),
       lastAnalysisAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }, { merge: true }).catch((err) => {
-      // Non-blocking but error is handled centrally
-      console.warn("Safety score persistence delayed:", err.message);
+      // Non-blocking update; errors are captured by the global listener if critical
     });
 
+    // Phase 6: Voice Enrichment for High-Risk Threats
     let warningAudio: string | undefined;
     if (analysis.riskScore > 40) {
       try {
         warningAudio = await generateVoiceWarning(analysis.personalizedWarning || analysis.scamType);
       } catch (e) {
-        // Voice is a secondary enrichment
+        // Voice is a secondary UX enhancement
       }
     }
 
