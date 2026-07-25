@@ -42,11 +42,6 @@ export default function AuthPage() {
     if (e.code === 'auth/unauthorized-domain') {
       const domain = typeof window !== 'undefined' ? window.location.hostname : '';
       setDomainError(domain);
-      toast({ 
-        variant: "destructive", 
-        title: "Domain Not Authorized", 
-        description: "Your security link requires domain authorization in the Firebase Console." 
-      });
     } else {
       toast({ 
         variant: "destructive", 
@@ -75,19 +70,16 @@ export default function AuthPage() {
       return;
     }
 
-    const checkRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
+    getRedirectResult(auth)
+      .then(async (result) => {
         if (result?.user) {
           await createUserProfile(result.user.uid, result.user.email || '');
-          toast({ title: "Identity Verified", description: "Access granted." });
+          toast({ title: "Identity Verified", description: "Access granted via Google." });
         }
-      } catch (e: any) {
+      })
+      .catch((e) => {
         handleAuthError(e);
-      }
-    };
-    
-    checkRedirect();
+      });
   }, [user, authLoading, router, auth, toast, handleAuthError, createUserProfile]);
 
   const form = useForm<z.infer<typeof authSchema>>({

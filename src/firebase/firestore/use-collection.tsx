@@ -40,7 +40,6 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setError(null);
       },
       async (serverError: FirestoreError) => {
-        // Suppress developer-mode crash loops for common configuration issues
         if (serverError.code === 'permission-denied') {
           let path = 'unknown';
           try {

@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:322431168944:web:0ae9605fc842e1a1f96675",
   storageBucket: "firebase-explorer-3mnk1.firebasestorage.app",
   apiKey: "AIzaSyDWbmtKVoDzKfF823bfGXc7qHypjSB3WDg",
-  authDomain: "fir-explorer-3mnk1.firebaseapp.com",
+  authDomain: "firebase-explorer-3mnk1.firebaseapp.com",
   messagingSenderId: "322431168944"
 };
 
