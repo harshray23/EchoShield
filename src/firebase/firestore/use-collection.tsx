@@ -12,6 +12,10 @@ import {
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
+/**
+ * Hook to subscribe to a Firestore collection query.
+ * @param query The Firestore query to listen to.
+ */
 export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = useState<T[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +24,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
   useEffect(() => {
     if (!query) {
       setLoading(false);
+      setData(null);
       return;
     }
 
@@ -28,9 +33,9 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
       query,
       (snapshot: QuerySnapshot<T>) => {
         const items = snapshot.docs.map((doc) => ({
-          ...doc.data(),
+          ...(doc.data() as any),
           id: doc.id,
-        }));
+        })) as T[];
         setData(items);
         setLoading(false);
         setError(null);
@@ -39,8 +44,9 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         // Extracting path safely for error context
         let path = 'analyses';
         try {
-          // Internal property access for debugging/logging purposes only
-          path = (query as any)._query?.path?.toString() || 'analyses';
+          // Attempt to extract the collection path from the query object for better debugging context
+          const internalQuery = (query as any)._query || query;
+          path = internalQuery.path?.toString() || 'analyses';
         } catch (e) {
           path = 'analyses';
         }
@@ -50,7 +56,8 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           operation: 'list',
         });
         
-        // Emit the error for the global listener
+        // Emit the error for the global listener (FirebaseErrorListener)
+        // In development, this triggers the Next.js error overlay with rich context
         errorEmitter.emit('permission-error', permissionError);
         
         setError(serverError);
