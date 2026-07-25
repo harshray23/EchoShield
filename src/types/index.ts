@@ -26,6 +26,7 @@ export interface ScamAnalysis {
   riskLevel: 'secure' | 'suspicious' | 'malicious';
   scamType: string;
   confidence: number;
+  confidenceReasons: string[];
   summary: string;
   redFlags: string[];
   psychology: string;

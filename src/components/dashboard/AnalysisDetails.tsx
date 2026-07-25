@@ -17,7 +17,9 @@ import {
   Key,
   Wallet,
   BrainCircuit,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle,
+  FileSearch
 } from 'lucide-react';
 import { RiskMeter } from './RiskMeter';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
@@ -88,9 +90,9 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                   {result.scamType}
                 </h2>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-3 mt-4">
-                  <span className="bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    Confidence: {(result.confidence * 100).toFixed(0)}%
-                  </span>
+                  <div className="bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                    Confidence: <span className="text-primary">{(result.confidence * 100).toFixed(0)}%</span>
+                  </div>
                   <span className="bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                     <ShieldCheck className="h-3 w-3 text-primary" /> Forensic Link Verified
                   </span>
@@ -99,6 +101,21 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
               <p className="text-muted-foreground leading-relaxed max-w-xl text-sm font-medium italic">
                 {result.summary}
               </p>
+
+              {/* Explainability Section ⭐ */}
+              <div className="pt-4 border-t border-white/5">
+                <p className="text-[10px] font-black tracking-widest uppercase text-primary mb-3 flex items-center gap-2">
+                  <FileSearch className="h-3 w-3" /> Confidence Evidence
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {result.confidenceReasons.map((reason, i) => (
+                    <div key={i} className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-lg border border-primary/20 text-[9px] font-bold text-white uppercase">
+                      <CheckCircle className="h-2.5 w-2.5 text-primary" />
+                      {reason}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="relative group shrink-0">
                <RiskMeter score={result.riskScore} />
@@ -107,7 +124,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
         </CardContent>
       </Card>
 
-      {/* Psychology Panel ⭐ - The Star Feature */}
+      {/* Psychology Panel ⭐ */}
       <Card className="glass-card border-primary/20 rounded-[2.5rem] overflow-hidden">
         <CardHeader className="p-8 pb-4">
           <div className="flex items-center justify-between">
@@ -203,7 +220,7 @@ export function AnalysisDetails({ result, audioUrl }: AnalysisDetailsProps) {
                   }`}>
                     {step.label}
                   </h4>
-                  <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-lg">
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed max-lg">
                     {step.description}
                   </p>
                 </div>

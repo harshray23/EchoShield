@@ -35,6 +35,7 @@ export class AnalysisService {
       riskLevel: analysis.riskLevel,
       scamType: analysis.scamType,
       confidence: analysis.confidence,
+      confidenceReasons: analysis.confidenceReasons,
       summary: analysis.summary,
       redFlags: analysis.redFlags,
       psychology: analysis.psychology,

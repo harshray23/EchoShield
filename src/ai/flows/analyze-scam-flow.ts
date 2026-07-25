@@ -15,6 +15,7 @@ const AnalyzeScamOutputSchema = z.object({
   riskLevel: z.enum(['secure', 'suspicious', 'malicious']),
   scamType: z.string().describe('Short clear identifying name of the scam, e.g. "Gift Card Scam Attempt"'),
   confidence: z.number().describe('Certainty score 0-1'),
+  confidenceReasons: z.array(z.string()).describe('Specific forensic reasons for the confidence level (e.g., "Known phishing keywords", "Urgency detected", "Suspicious domain", "Financial request", "Impersonation language")'),
   summary: z.string().describe('A concise summary of the content and the finding.'),
   psychology: z.string().describe('Detailed educational explanation of WHY this is a threat and the manipulation tactics used.'),
   manipulationTactics: z.array(z.enum([
