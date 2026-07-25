@@ -14,17 +14,30 @@ const AnalyzeScamInputSchema = z.object({
 
 const AnalyzeScamOutputSchema = z.object({
   riskScore: z.number().describe('Risk score 0-100'),
-  riskLevel: z.enum(['secure', 'suspicious', 'malicious']),
-  trustLabel: z.enum(['Trusted', 'Suspicious', 'Dangerous', 'Highly Dangerous']),
-  scamCategory: z.string().describe('One of: 🏦 Bank Scam, 💼 Job Scam, ❤️ Romance Scam, 📦 Courier Scam, 🎁 Lottery Scam, 💰 UPI Scam, 📱 WhatsApp Scam, 📧 Email Phishing, 👮 Police Scam, 🎓 Scholarship Scam'),
-  scamType: z.string().describe('Short clear identifying name of the scam'),
-  confidence: z.number().describe('Certainty score 0-1'),
-  confidenceReasons: z.array(z.string()).describe('Forensic reasons (e.g., "Known phishing keywords")'),
-  summary: z.string().describe('Concise forensic summary.'),
-  grandmaExplanation: z.string().describe('A very simple, non-technical explanation. E.g., "This message is trying to steal your bank password."'),
-  personalizedWarning: z.string().describe('A personalized warning using the user name if provided.'),
-  psychology: z.string().describe('Educational explanation of manipulation tactics.'),
-  aiDetectiveInsights: z.array(z.string()).describe('Detective observations starting with "I noticed..."'),
+  riskLevel: z.enum(['secure', 'suspicious', 'malicious', 'nuclear']),
+  trustLabel: z.enum(['Trusted', 'Suspicious', 'Dangerous', 'Highly Dangerous', 'NUCLEAR ☠️']),
+  scamCategory: z.string().describe('Emoji-led category e.g. 🏦 Bank Scam'),
+  scamType: z.string().describe('Identifying name'),
+  confidence: z.number().describe('0-1'),
+  confidenceReasons: z.array(z.string()),
+  summary: z.string(),
+  grandmaExplanation: z.string(),
+  personalizedWarning: z.string(),
+  targetReason: z.string().describe('Why this specific user was targeted based on context'),
+  scamDNA: z.object({
+    emotion: z.number().describe('0-100'),
+    urgency: z.number().describe('0-100'),
+    authority: z.number().describe('0-100'),
+    greed: z.number().describe('0-100'),
+    fear: z.number().describe('0-100'),
+  }),
+  highlights: z.array(z.object({
+    text: z.string().describe('Specific snippet from content'),
+    type: z.enum(['danger', 'warning', 'info']),
+    explanation: z.string(),
+  })),
+  psychology: z.string(),
+  aiDetectiveInsights: z.array(z.string()),
   manipulationTactics: z.array(z.enum([
     'Urgency', 'Authority', 'Fear', 'Greed', 'Scarcity',
     'Curiosity', 'Emotional Appeal', 'Isolation', 'Reward Promise'
@@ -33,7 +46,7 @@ const AnalyzeScamOutputSchema = z.object({
     trait: z.string(),
     fake: z.string(),
     genuine: z.string(),
-  })).describe('Fake vs Genuine comparison points.'),
+  })),
   redFlags: z.array(z.string()),
   recommendations: z.array(z.string()),
   timeline: z.array(z.object({
@@ -42,7 +55,7 @@ const AnalyzeScamOutputSchema = z.object({
     status: z.enum(['pending', 'active', 'completed']),
     iconType: z.enum(['message', 'link', 'otp', 'money', 'risk']),
   })),
-  safetyScoreEarned: z.number().describe('Points earned for checking this (e.g. 10-50)'),
+  safetyScoreEarned: z.number(),
 });
 
 export type AnalyzeScamInput = z.infer<typeof AnalyzeScamInputSchema>;
@@ -56,7 +69,7 @@ const analyzePrompt = ai.definePrompt({
   prompt: `
   Analyze the provided {{type}} content for security threats in {{language}}.
   
-  {{#if userName}}User Name: {{userName}}{{/if}}
+  {{#if userName}}User Name: {{userName}}{{if}}{{/if}}
   
   Context Type: {{type}}
   
@@ -76,14 +89,13 @@ const analyzePrompt = ai.definePrompt({
   {{#if (eq type "document")}}
   Document Content: {{media url=content}}
   {{/if}}
-  
-  JUDGE FAVORITE REQUIREMENTS:
-  1. Provide a "Grandma Explanation": Extremely simple, one-sentence takeaway.
-  2. Categories: Must use the specific emoji-led categories requested.
-  3. AI Detective: Provide 3-4 "I noticed..." insights.
-  4. Comparisons: Give at least 3 "Fake vs Genuine" points.
-  5. Personalization: If a name is provided, address the user in the 'personalizedWarning'.
-  6. Tone: Professional but caring. "Scammers are already using AI. It's time people had AI on their side too."
+
+  SPECIFIC JUDGE REQUIREMENTS:
+  1. SCAM DNA: Provide scores for Emotion, Urgency, Authority, Greed, and Fear based on the linguistic and visual markers.
+  2. TARGET REASON: Infer why the user was targeted (e.g., "They mention a bank you likely use").
+  3. NUCLEAR THREAT: If the risk is extreme (direct theft, high pressure), set riskLevel to 'nuclear' and trustLabel to 'NUCLEAR ☠️'.
+  4. AI X-RAY: Identify specific phrases in the content and explain why they are red flags in the 'highlights' field.
+  5. GRANDMA MODE: One simple takeaway sentence.
   `,
 });
 

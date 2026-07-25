@@ -11,7 +11,7 @@ export type ManipulationTactic =
   | 'Isolation' 
   | 'Reward Promise';
 
-export type TrustLevel = 'Trusted' | 'Suspicious' | 'Dangerous' | 'Highly Dangerous';
+export type TrustLevel = 'Trusted' | 'Suspicious' | 'Dangerous' | 'Highly Dangerous' | 'NUCLEAR ☠️';
 
 export interface TimelineStep {
   label: string;
@@ -26,28 +26,45 @@ export interface ComparisonPoint {
   genuine: string;
 }
 
+export interface ScamDNA {
+  emotion: number;
+  urgency: number;
+  authority: number;
+  greed: number;
+  fear: number;
+}
+
+export interface Highlight {
+  text: string;
+  type: 'danger' | 'warning' | 'info';
+  explanation: string;
+}
+
 export interface ScamAnalysis {
   id?: string;
   userId: string;
   type: AnalysisType;
   riskScore: number;
-  riskLevel: 'secure' | 'suspicious' | 'malicious';
+  riskLevel: 'secure' | 'suspicious' | 'malicious' | 'nuclear';
   trustLabel: TrustLevel;
-  scamCategory: string; // e.g., "🏦 Bank Scam", "💼 Job Scam"
+  scamCategory: string;
   scamType: string;
   confidence: number;
   confidenceReasons: string[];
   summary: string;
-  grandmaExplanation: string; // Simple, non-technical explanation
+  grandmaExplanation: string;
   psychology: string;
-  aiDetectiveInsights: string[]; // Detective "I noticed..." points
+  aiDetectiveInsights: string[];
   manipulationTactics: ManipulationTactic[];
   recommendations: string[];
-  comparisons: ComparisonPoint[]; // Fake vs Genuine
+  comparisons: ComparisonPoint[];
   timeline: TimelineStep[];
-  timestamp: any; // Firestore Timestamp
+  scamDNA: ScamDNA;
+  highlights: Highlight[];
+  timestamp: any;
   metadata?: Record<string, any>;
   safetyScoreEarned: number;
+  targetReason?: string;
 }
 
 export interface UserProfile {

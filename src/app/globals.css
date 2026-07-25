@@ -56,6 +56,15 @@
   @apply bg-gradient-to-r from-primary via-primary to-accent text-white font-black transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-primary/20;
 }
 
+.nuclear-pulse {
+  animation: pulse-red 1s infinite alternate;
+}
+
+@keyframes pulse-red {
+  from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
+  to { box-shadow: 0 0 40px rgba(255, 0, 0, 0.6); }
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }
