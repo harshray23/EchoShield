@@ -4,11 +4,6 @@ import React, { useMemo } from 'react';
 import { getFirebaseApp, getFirebaseAuth, getFirebaseFirestore } from './config';
 import { FirebaseProvider } from './provider';
 
-/**
- * FirebaseClientProvider handles the initialization of Firebase on the client side.
- * This avoids serialization errors when passing Firebase instances from Server to Client components.
- * It imports directly from config to avoid circular dependencies with the index barrel file.
- */
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {

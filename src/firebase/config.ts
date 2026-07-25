@@ -2,7 +2,6 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
-// Hardcoded config based on project requirements since .env is empty
 const firebaseConfig = {
   projectId: "firebase-explorer-3mnk1",
   appId: "1:322431168944:web:0ae9605fc842e1a1f96675",
