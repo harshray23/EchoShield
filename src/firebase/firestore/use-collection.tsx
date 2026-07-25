@@ -37,7 +37,13 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
       },
       async (serverError: FirestoreError) => {
         // Extracting path safely for error context
-        const path = (query as any)._query?.path?.toString() || 'analyses';
+        let path = 'analyses';
+        try {
+          // Internal property access for debugging/logging purposes only
+          path = (query as any)._query?.path?.toString() || 'analyses';
+        } catch (e) {
+          path = 'analyses';
+        }
         
         const permissionError = new FirestorePermissionError({
           path,
