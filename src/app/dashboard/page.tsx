@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, ShieldAlert, Zap, Globe, TrendingUp, Search, Info, ShieldCheck } from 'lucide-react';
-import { useFirestore, useUser, useDoc } from '@/firebase';
+import { Fingerprint, ShieldAlert, Zap, Globe, TrendingUp, Search, Info, ShieldCheck, Languages, Target, Activity } from 'lucide-react';
+import { useFirestore, useUser, useDoc, useCollection } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { AnalysisService } from '@/services/analysis-service';
 import { TriageCenter } from '@/components/dashboard/TriageCenter';
 import { AnalysisDetails } from '@/components/dashboard/AnalysisDetails';
 import { AnalysisLoader } from '@/components/dashboard/AnalysisLoader';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
-import { doc } from 'firebase/firestore';
-import { UserProfile } from '@/types';
+import { analyzeTargetingPatterns, type TargetAnalysisOutput } from '@/ai/flows/target-analysis-flow';
+import { doc, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { UserProfile, ScamAnalysis } from '@/types';
+import { Card } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -19,6 +21,8 @@ export default function DashboardPage() {
   const [caseId, setCaseId] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [language, setLanguage] = useState('English');
+  const [targetInsight, setTargetInsight] = useState<TargetAnalysisOutput | null>(null);
+  const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
   
   const { user } = useUser();
   const db = useFirestore();
@@ -26,6 +30,58 @@ export default function DashboardPage() {
 
   const userRef = user ? doc(db, 'users', user.uid) : null;
   const { data: profile } = useDoc<UserProfile>(userRef as any);
+
+  // Fetch recent history for exposure analysis
+  const historyQuery = useMemo(() => {
+    if (!user) return null;
+    return query(
+      collection(db, 'analyses'),
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc'),
+      limit(20)
+    );
+  }, [user, db]);
+
+  const { data: recentAnalyses } = useCollection<ScamAnalysis>(historyQuery);
+
+  // Calculate Scam Exposure Distribution
+  const exposureStats = useMemo(() => {
+    if (!recentAnalyses) return [];
+    const counts: Record<string, number> = {};
+    recentAnalyses.forEach(a => {
+      counts[a.scamCategory] = (counts[a.scamCategory] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count, percent: (count / recentAnalyses.length) * 100 }))
+      .sort((a, b) => b.count - a.count);
+  }, [recentAnalyses]);
+
+  // Generate targeting insight when history changes
+  useEffect(() => {
+    async function getInsight() {
+      if (!user || !recentAnalyses || recentAnalyses.length < 3 || targetInsight) return;
+      
+      setIsGeneratingInsight(true);
+      try {
+        const historyData = recentAnalyses.map(a => ({
+          type: a.scamType,
+          category: a.scamCategory,
+          summary: a.summary
+        }));
+        
+        const insight = await analyzeTargetingPatterns({
+          scamHistory: historyData,
+          userName: user.displayName || 'Agent'
+        });
+        setTargetInsight(insight);
+      } catch (e) {
+        console.error("Failed to generate targeting insight", e);
+      } finally {
+        setIsGeneratingInsight(false);
+      }
+    }
+    getInsight();
+  }, [recentAnalyses, user, targetInsight]);
 
   const handleAnalyze = async (type: 'text' | 'image' | 'voice' | 'document', content: string) => {
     if (!user) return;
@@ -106,6 +162,32 @@ export default function DashboardPage() {
              </div>
           </div>
 
+          {/* Scam Exposure Chart */}
+          {exposureStats.length > 0 && (
+            <Card className="glass-card border-white/5 rounded-[2rem] p-6">
+              <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-6">
+                <Target className="h-4 w-4" /> Your Scam Exposure
+              </div>
+              <div className="space-y-4">
+                {exposureStats.slice(0, 5).map(stat => (
+                  <div key={stat.name} className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
+                      <span className="text-muted-foreground truncate max-w-[120px]">{stat.name}</span>
+                      <span className="text-primary">{Math.round(stat.percent)}%</span>
+                    </div>
+                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${stat.percent}%` }}
+                        className="h-full bg-primary shadow-[0_0_10px_rgba(0,183,255,0.3)]"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           <Card className="glass-card border-white/5 rounded-[2rem] p-6 bg-primary/5">
              <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-4">
                 <TrendingUp className="h-4 w-4" /> Today's Trending Scams
@@ -133,6 +215,40 @@ export default function DashboardPage() {
               <AnalysisLoader key="loader" />
             ) : !result ? (
               <div className="space-y-8">
+                {/* Personalized Targeting Insight */}
+                {(isGeneratingInsight || targetInsight) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-8 glass-card border-primary/30 rounded-[3rem] relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 p-8 opacity-5">
+                      <Fingerprint className="h-32 w-32" />
+                    </div>
+                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                      <div className="p-6 bg-primary/10 rounded-[2rem] border border-primary/20 cyber-glow shrink-0">
+                        <Activity className="h-12 w-12 text-primary" />
+                      </div>
+                      <div className="space-y-3 flex-1">
+                        <h4 className="text-xl font-black uppercase tracking-tighter text-primary">Nova's Targeting Analysis</h4>
+                        {isGeneratingInsight ? (
+                          <p className="text-sm text-muted-foreground animate-pulse font-medium">Analyzing your forensic footprint for patterns...</p>
+                        ) : (
+                          <div className="space-y-4">
+                            <p className="text-sm font-medium leading-relaxed italic text-white/90">
+                              "{targetInsight?.insight}"
+                            </p>
+                            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                               <p className="text-[10px] font-black text-primary uppercase mb-1">Guardian Recommendation</p>
+                               <p className="text-xs font-bold text-white/80">{targetInsight?.safetyRecommendation}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
