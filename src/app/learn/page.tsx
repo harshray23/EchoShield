@@ -53,6 +53,16 @@ const MODULES = [
 export default function LearnPage() {
   const [activeModule, setActiveModule] = useState<typeof MODULES[0] | null>(null);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [currentScenario, setCurrentScenario] = useState<string | null>(null);
+
+  const handleStartModule = (module: typeof MODULES[0]) => {
+    setActiveModule(module);
+  };
+
+  const handleLaunchSimulator = (scenario: string) => {
+    setCurrentScenario(scenario);
+    setIsSimulatorOpen(true);
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-12">
@@ -95,7 +105,7 @@ export default function LearnPage() {
                   ))}
                 </div>
                 <Button 
-                  onClick={() => setActiveModule(module)}
+                  onClick={() => handleStartModule(module)}
                   className="w-full rounded-xl bg-white/5 hover:bg-primary hover:text-white border-white/5 font-bold transition-all"
                 >
                   Start Module
@@ -119,7 +129,7 @@ export default function LearnPage() {
             Test your skills in a safe environment. Interact with simulated scammers and see if you can spot the red flags in real-time.
           </p>
           <Button 
-            onClick={() => setIsSimulatorOpen(true)}
+            onClick={() => handleLaunchSimulator("A suspicious text message from an unknown number claiming to be your bank.")}
             size="lg" 
             className="rounded-2xl btn-gradient cyber-glow px-8 h-14 text-lg font-black"
           >
@@ -131,7 +141,7 @@ export default function LearnPage() {
       {/* Module Detail Dialog */}
       <Dialog open={!!activeModule} onOpenChange={(open) => !open && setActiveModule(null)}>
         <DialogContent className="max-w-3xl glass-card rounded-[3rem] p-0 border-white/5 overflow-hidden">
-          {activeModule && (
+          {activeModule ? (
             <div className="flex flex-col">
               <DialogHeader className="p-8 bg-primary/10 border-b border-white/5 space-y-4 text-left">
                 <div className="flex items-center gap-4">
@@ -169,7 +179,7 @@ export default function LearnPage() {
                       Ready to apply what you've learned? Launch the Nova Simulator to test your resistance against this specific threat vector.
                     </p>
                     <Button 
-                      onClick={() => setIsSimulatorOpen(true)}
+                      onClick={() => handleLaunchSimulator(activeModule.scenario)}
                       className="w-full rounded-xl bg-accent/20 text-accent hover:bg-accent hover:text-white transition-all font-bold"
                     >
                       Practice Scenario
@@ -184,6 +194,12 @@ export default function LearnPage() {
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="p-12 text-center">
+              <DialogTitle className="sr-only">Loading Module</DialogTitle>
+              <DialogDescription className="sr-only">Please wait while the module defense protocols are initialized.</DialogDescription>
+              <BookOpen className="h-12 w-12 text-primary animate-pulse mx-auto" />
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -195,7 +211,7 @@ export default function LearnPage() {
             <DialogTitle>Nova Scam Simulator</DialogTitle>
             <DialogDescription>Experience and identify social engineering threats in a safe environment.</DialogDescription>
           </DialogHeader>
-          <ScamSimulator scenario={activeModule?.scenario || "A suspicious text message from an unknown number claiming to be your bank."} />
+          <ScamSimulator scenario={currentScenario || "A suspicious text message from an unknown number claiming to be your bank."} />
         </DialogContent>
       </Dialog>
     </div>
