@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -9,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { SCAM_SIMULATOR_SYSTEM_INSTRUCTION } from '@/ai/prompts/scam-templates';
 
 const SimulationInputSchema = z.object({

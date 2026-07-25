@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -39,11 +40,14 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
       const res = await continueSimulation({ scenario, history: [] });
       setMessages([{ role: 'model', content: res.message }]);
     } catch (e: any) {
-      const errorMsg = e.message || 'Nova could not establish the adversary connection.';
+      const errorMsg = e.message?.includes('429') 
+        ? 'Neural Link Congested: The AI is busy. Please wait 15 seconds and retry.' 
+        : (e.message || 'Nova could not establish the adversary connection.');
+      
       setError(errorMsg);
       toast({ 
         variant: 'destructive', 
-        title: 'Simulator Link Failed',
+        title: 'Simulator Link Error',
         description: errorMsg 
       });
     } finally {
@@ -84,6 +88,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
         title: 'Simulator Desync',
         description: e.message || 'The simulation link was interrupted.'
       });
+      setError(e.message || 'Forensic Link Interrupted.');
     } finally {
       setLoading(false);
     }
@@ -140,7 +145,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
                   </div>
                 </motion.div>
               ))}
-              {loading && (
+              {loading && !error && (
                 <div className="flex justify-start">
                   <div className="bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -187,7 +192,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
               </Button>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
       <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground opacity-50">
         <Brain className="h-3 w-3" /> Nova Security Training Environment
