@@ -26,6 +26,7 @@ export const SCAM_ANALYSIS_PROMPT = `
 Analyze the provided {{type}} content for security threats.
 
 Context Type: {{type}}
+
 {{#if (eq type "text")}}
 Chat/Text Content: """{{{content}}}"""
 {{/if}}
@@ -35,7 +36,11 @@ Examine this screenshot (OCR and Visual Analysis) for red flags: {{media url=con
 {{/if}}
 
 {{#if (eq type "voice")}}
-(Transcript/Audio Processing) Analyze speech patterns and high-pressure tactics: {{content}}
+(Audio Processing) Analyze speech patterns and high-pressure tactics in this audio: {{media url=content}}
+{{/if}}
+
+{{#if (eq type "document")}}
+Forensically examine this document (PDF/DOCX/TXT) for phishing, fraudulent terms, or suspicious requests: {{media url=content}}
 {{/if}}
 
 Educational Directive:

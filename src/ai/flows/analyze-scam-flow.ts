@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -6,8 +5,8 @@ import { z } from 'genkit';
 import { PromptService } from '@/services/prompt-service';
 
 const AnalyzeScamInputSchema = z.object({
-  type: z.enum(['text', 'image', 'voice']),
-  content: z.string().describe('Text content or base64 data URI for image/voice.'),
+  type: z.enum(['text', 'image', 'voice', 'document']),
+  content: z.string().describe('Text content or base64 data URI for media/document.'),
 });
 
 const AnalyzeScamOutputSchema = z.object({
@@ -34,6 +33,6 @@ const analyzePrompt = ai.definePrompt({
 
 export async function analyzeScam(input: AnalyzeScamInput): Promise<AnalyzeScamOutput> {
   const { output } = await analyzePrompt(input);
-  if (!output) throw new Error('AI failed to generate analysis');
+  if (!output) throw new Error('AI failed to generate forensic analysis');
   return output;
 }

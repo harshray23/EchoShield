@@ -1,5 +1,4 @@
-
-export type AnalysisType = 'text' | 'image' | 'voice';
+export type AnalysisType = 'text' | 'image' | 'voice' | 'document';
 
 export interface ScamAnalysis {
   id?: string;
