@@ -1,143 +1,149 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAppContext } from '@/lib/AppContext';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FireboltIcon } from '@/components/icons';
+import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Shield, Fingerprint } from 'lucide-react';
 
-const loginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
-});
-
-const signupSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+const authSchema = z.object({
+  email: z.string().email('Access protocol requires valid email.'),
+  password: z.string().min(8, 'Encryption key must be at least 8 characters.'),
 });
 
 export default function AuthPage() {
-  const { login, signup } = useAppContext();
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const auth = useAuth();
 
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+  const form = useForm<z.infer<typeof authSchema>>({
+    resolver: zodResolver(authSchema),
+    defaultValues: { email: '', password: '' },
   });
 
-  const signupForm = useForm<z.infer<typeof signupSchema>>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: { name: "", email: "", password: "" },
-  });
-
-  const onLogin = (values: z.infer<typeof loginSchema>) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      login({ email: values.email });
+  const onLogin = async (values: z.infer<typeof authSchema>) => {
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
       router.push('/dashboard');
-      setIsSubmitting(false);
-    }, 500);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onSignup = (values: z.infer<typeof signupSchema>) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      signup({ name: values.name, email: values.email });
+  const onSignup = async (values: z.infer<typeof authSchema>) => {
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, values.email, values.password);
       router.push('/dashboard');
-      setIsSubmitting(false);
-    }, 500);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      router.push('/dashboard');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <FireboltIcon className="h-8 w-8 text-accent" />
-        <h1 className="text-2xl font-bold">FireBase Explorer </h1>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background relative overflow-hidden">
+      <div className="absolute inset-0 bg-primary/5 blur-[120px] pointer-events-none" />
+      
+      <div className="w-full max-w-md space-y-8 relative z-10">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="p-4 rounded-[2rem] bg-primary/10 border border-primary/20 cyber-glow">
+              <Fingerprint className="h-12 w-12 text-primary" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-black tracking-tight">Security Gateway</h1>
+          <p className="text-muted-foreground font-medium">Authentication required to enter the console.</p>
+        </div>
+
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 p-1 bg-white/5 rounded-2xl mb-8 h-12">
+            <TabsTrigger value="login" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">ACCESS</TabsTrigger>
+            <TabsTrigger value="signup" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">ENROLL</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
+            <Card className="glass-card border-white/5 rounded-[2rem]">
+              <CardContent className="pt-8 space-y-6">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onLogin)} className="space-y-4">
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Identity Protocol</FormLabel>
+                        <FormControl><Input placeholder="agent@echoshield.ai" {...field} className="h-12 rounded-xl bg-white/5 border-white/10" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="password" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Encryption Key</FormLabel>
+                        <FormControl><Input type="password" placeholder="••••••••" {...field} className="h-12 rounded-xl bg-white/5 border-white/10" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <Button type="submit" className="w-full h-12 rounded-xl btn-gradient cyber-glow" disabled={loading}>
+                      {loading ? 'Processing...' : 'ESTABLISH LINK'}
+                    </Button>
+                  </form>
+                </Form>
+                <div className="relative"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground font-black tracking-widest">or third-party</span></div></div>
+                <Button variant="outline" className="w-full h-12 rounded-xl border-white/10 bg-white/5" onClick={onGoogleLogin}>
+                  Secure Login with Google
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="signup">
+            <Card className="glass-card border-white/5 rounded-[2rem]">
+              <CardContent className="pt-8 space-y-6">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSignup)} className="space-y-4">
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Register Identity</FormLabel>
+                        <FormControl><Input placeholder="agent@echoshield.ai" {...field} className="h-12 rounded-xl bg-white/5 border-white/10" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="password" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Generate Key</FormLabel>
+                        <FormControl><Input type="password" placeholder="••••••••" {...field} className="h-12 rounded-xl bg-white/5 border-white/10" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <Button type="submit" className="w-full h-12 rounded-xl btn-gradient cyber-glow" disabled={loading}>
+                      {loading ? 'Encrypting...' : 'CREATE IDENTITY'}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-      <Tabs defaultValue="login" className="w-full max-w-sm">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="signup">Sign Up</TabsTrigger>
-        </TabsList>
-        <TabsContent value="login">
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome back</CardTitle>
-              <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-                  <FormField control={loginForm.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={loginForm.control} name="password" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl><Input type="password" placeholder="Enter your password" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" className="w-full btn-gradient" disabled={isSubmitting}>
-                    {isSubmitting ? "Signing In..." : "Sign In"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="signup">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create an account</CardTitle>
-              <CardDescription>Enter your details to get started.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
-                  <FormField control={signupForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={signupForm.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={signupForm.control} name="password" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" className="w-full btn-gradient" disabled={isSubmitting}>
-                    {isSubmitting ? "Signing Up..." : "Sign Up"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

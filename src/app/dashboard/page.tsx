@@ -1,21 +1,25 @@
+'use client';
 
-"use client";
-
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, ShieldCheck, Upload, AlertCircle, Play, FileText, CheckCircle2, History } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Upload, AlertCircle, Play, FileText, CheckCircle2, History, Loader2, Volume2, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeScam, type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { generateVoiceWarning } from '@/ai/flows/voice-warning-flow';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function Dashboard() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalyzeScamOutput | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const db = useFirestore();
+  const { user } = useUser();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -36,8 +40,18 @@ export default function Dashboard() {
         const analysis = await analyzeScam({ type: type as any, content: base64 });
         setResult(analysis);
 
+        // Save to Firestore if logged in
+        if (user) {
+          addDoc(collection(db, 'analyses'), {
+            userId: user.uid,
+            type,
+            ...analysis,
+            timestamp: serverTimestamp(),
+          });
+        }
+
         // Generate voice warning for high risk
-        if (analysis.score > 50) {
+        if (analysis.score > 40) {
           const warning = await generateVoiceWarning(analysis.verdict);
           setAudioUrl(warning);
         }
@@ -57,24 +71,31 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <header className="flex items-center justify-between">
+    <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-10">
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">AI Security Dashboard</h1>
-          <p className="text-muted-foreground">Upload content to detect potential threats.</p>
+          <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
+            <Fingerprint className="h-10 w-10 text-primary" />
+            Security Console
+          </h1>
+          <p className="text-muted-foreground font-medium">Real-time threat detection and forensic analysis.</p>
         </div>
-        <Button variant="outline" className="border-primary/20"><History className="mr-2 h-4 w-4" /> History</Button>
+        <div className="flex gap-3">
+           <Button variant="outline" className="rounded-xl border-white/10 hover:bg-white/5">
+            <History className="mr-2 h-4 w-4" /> Scan History
+          </Button>
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Upload & Scanner */}
-        <Card className="lg:col-span-1 glass-card border-primary/20">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Input Terminal */}
+        <Card className="xl:col-span-1 glass-card border-primary/20 rounded-[2rem]">
           <CardHeader>
-            <CardTitle>Threat Scanner</CardTitle>
-            <CardDescription>Upload screenshots or voice memos.</CardDescription>
+            <CardTitle className="text-2xl">Target Input</CardTitle>
+            <CardDescription>Upload suspected evidence for AI triage.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="border-2 border-dashed border-primary/20 rounded-xl p-10 text-center space-y-4 hover:border-primary/40 transition-colors cursor-pointer relative">
+          <CardContent className="space-y-8">
+            <div className="group border-2 border-dashed border-primary/20 rounded-3xl p-12 text-center space-y-4 hover:border-primary transition-all cursor-pointer relative bg-primary/5 hover:bg-primary/10">
               <input 
                 type="file" 
                 className="absolute inset-0 opacity-0 cursor-pointer" 
@@ -82,125 +103,156 @@ export default function Dashboard() {
                 accept="image/*,audio/*"
                 disabled={analyzing}
               />
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                <Upload className="h-8 w-8 text-primary" />
+              <div className="bg-primary/20 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                {analyzing ? (
+                  <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                ) : (
+                  <Upload className="h-10 w-10 text-primary" />
+                )}
               </div>
-              <p className="text-sm font-medium">Click to upload or drag & drop</p>
-              <p className="text-xs text-muted-foreground">Screenshots (PNG/JPG) or Voice (MP3/WAV)</p>
+              <div className="space-y-1">
+                <p className="text-lg font-bold">Initiate Scan</p>
+                <p className="text-sm text-muted-foreground">Screenshots or Voice Memos</p>
+              </div>
             </div>
 
             {analyzing && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>AI Scanning...</span>
-                  <span>75%</span>
+              <div className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5 animate-pulse">
+                <div className="flex justify-between text-xs font-bold tracking-widest text-primary">
+                  <span>ANALYZING PATTERNS</span>
+                  <span>PROC: 88%</span>
                 </div>
-                <Progress value={75} className="h-2" />
+                <Progress value={88} className="h-2 bg-white/10" />
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Results Card */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* Intelligence Output */}
+        <div className="xl:col-span-2 space-y-8">
           <AnimatePresence mode="wait">
             {!result ? (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="h-full flex flex-col items-center justify-center glass-card rounded-2xl p-20 text-center border-white/5"
+                className="h-[400px] flex flex-col items-center justify-center glass-card rounded-[2rem] p-12 text-center border-white/5"
               >
-                <ShieldAlert className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold">Ready for Scan</h3>
-                <p className="text-muted-foreground">Upload a file to begin the AI analysis.</p>
+                <ShieldAlert className="h-20 w-20 text-white/10 mb-6" />
+                <h3 className="text-2xl font-bold">Awaiting Scan</h3>
+                <p className="text-muted-foreground max-w-sm">System idle. Please provide input to begin the behavioral analysis sequence.</p>
               </motion.div>
             ) : (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
               >
-                {/* Risk Meter */}
-                <Card className="glass-card border-primary/20">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-sm uppercase tracking-wider text-muted-foreground font-bold">Threat Level</p>
-                        <h2 className={`text-4xl font-black ${result.score > 70 ? 'text-destructive' : result.score > 40 ? 'text-orange-500' : 'text-accent'}`}>
+                {/* Score & Verdict */}
+                <Card className="glass-card border-primary/20 overflow-hidden rounded-[2rem]">
+                  <div className={`h-2 w-full ${result.score > 70 ? 'bg-destructive' : result.score > 40 ? 'bg-orange-500' : 'bg-accent'}`} />
+                  <CardContent className="p-8">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                      <div className="space-y-2 text-center md:text-left">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-black">Threat Level Assessment</p>
+                        <h2 className={`text-6xl font-black tracking-tighter ${result.score > 70 ? 'text-destructive' : result.score > 40 ? 'text-orange-500' : 'text-accent'}`}>
                           {result.score > 70 ? 'CRITICAL' : result.score > 40 ? 'WARNING' : 'SECURE'}
                         </h2>
+                        <p className="text-lg font-medium opacity-80">{result.verdict}</p>
                       </div>
-                      <div className="relative h-24 w-24">
-                        <svg className="h-24 w-24 -rotate-90">
-                          <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/5" />
-                          <circle 
-                            cx="48" cy="48" r="40" 
-                            stroke="currentColor" strokeWidth="8" fill="transparent" 
-                            strokeDasharray={2 * Math.PI * 40}
-                            strokeDashoffset={2 * Math.PI * 40 * (1 - result.score / 100)}
+                      
+                      <div className="relative h-40 w-40">
+                        <svg className="h-40 w-40 -rotate-90">
+                          <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-white/5" />
+                          <motion.circle 
+                            cx="80" cy="80" r="70" 
+                            stroke="currentColor" strokeWidth="12" fill="transparent" 
+                            strokeDasharray={2 * Math.PI * 70}
+                            initial={{ strokeDashoffset: 2 * Math.PI * 70 }}
+                            animate={{ strokeDashoffset: 2 * Math.PI * 70 * (1 - result.score / 100) }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
                             className={result.score > 70 ? 'text-destructive' : result.score > 40 ? 'text-orange-500' : 'text-accent'}
                           />
                         </svg>
-                        <span className="absolute inset-0 flex items-center justify-center font-bold text-xl">{result.score}%</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="font-black text-4xl">{result.score}%</span>
+                          <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Risk Score</span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Explanation */}
-                  <Card className="glass-card border-white/10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Forensic Breakdown */}
+                  <Card className="glass-card border-white/5 rounded-[2rem]">
                     <CardHeader>
-                      <CardTitle className="flex items-center"><AlertCircle className="mr-2 h-5 w-5 text-primary" /> Analysis Breakdown</CardTitle>
+                      <CardTitle className="flex items-center text-xl font-bold"><AlertCircle className="mr-3 h-6 w-6 text-primary" /> Intelligence Report</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm leading-relaxed">{result.explanation}</p>
+                    <CardContent className="space-y-6">
+                      <p className="text-muted-foreground leading-relaxed">{result.explanation}</p>
+                      
                       {audioUrl && (
-                        <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 flex items-center gap-4">
-                          <Button size="icon" className="rounded-full" onClick={() => new Audio(audioUrl).play()}>
-                            <Play className="h-4 w-4" />
+                        <div className="p-6 bg-primary/10 rounded-3xl border border-primary/20 flex items-center gap-6 group hover:bg-primary/15 transition-colors">
+                          <Button 
+                            size="icon" 
+                            className="h-14 w-14 rounded-2xl shadow-xl hover:scale-110 transition-transform" 
+                            onClick={() => {
+                              if (audioRef.current) audioRef.current.play();
+                            }}
+                          >
+                            <Volume2 className="h-6 w-6" />
                           </Button>
-                          <div className="text-xs">
-                            <p className="font-bold text-primary">AI Voice Alert</p>
-                            <p className="text-muted-foreground">Generated by ElevenLabs</p>
+                          <div className="space-y-1">
+                            <p className="font-black text-primary tracking-tight">AI VOICE ALERT</p>
+                            <p className="text-xs text-muted-foreground font-medium">Critical warning synthesized.</p>
                           </div>
+                          <audio ref={audioRef} src={audioUrl} className="hidden" />
                         </div>
                       )}
                     </CardContent>
                   </Card>
 
-                  {/* Red Flags */}
-                  <Card className="glass-card border-white/10">
+                  {/* Red Flags Terminal */}
+                  <Card className="glass-card border-white/5 rounded-[2rem]">
                     <CardHeader>
-                      <CardTitle className="flex items-center"><ShieldAlert className="mr-2 h-5 w-5 text-destructive" /> Red Flags</CardTitle>
+                      <CardTitle className="flex items-center text-xl font-bold"><ShieldAlert className="mr-3 h-6 w-6 text-destructive" /> Threat Indicators</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ul className="space-y-2">
+                      <div className="space-y-3">
                         {result.redFlags.map((flag, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-destructive font-bold">•</span> {flag}
-                          </li>
+                          <motion.div 
+                            initial={{ x: -10, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: i * 0.1 }}
+                            key={i} 
+                            className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex items-start gap-3"
+                          >
+                            <div className="mt-1 h-2 w-2 rounded-full bg-destructive shadow-[0_0_8px_red]" />
+                            <span className="text-sm font-semibold tracking-tight">{flag}</span>
+                          </motion.div>
                         ))}
-                      </ul>
+                      </div>
                     </CardContent>
                   </Card>
 
-                  {/* Advice & Checklist */}
-                  <Card className="md:col-span-2 glass-card border-accent/20">
+                  {/* Action Checklist */}
+                  <Card className="md:col-span-2 glass-card border-accent/20 rounded-[2rem]">
                     <CardHeader>
-                      <CardTitle className="flex items-center"><CheckCircle2 className="mr-2 h-5 w-5 text-accent" /> Action Checklist</CardTitle>
+                      <CardTitle className="flex items-center text-xl font-bold"><CheckCircle2 className="mr-3 h-6 w-6 text-accent" /> Countermeasures</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         {result.checklist.map((item, i) => (
-                          <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg text-sm border border-white/5">
-                            <CheckCircle2 className="h-4 w-4 text-accent" /> {item}
+                          <div key={i} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl text-sm border border-white/5 hover:border-accent/30 transition-all">
+                            <CheckCircle2 className="h-5 w-5 text-accent" /> 
+                            <span className="font-medium">{item}</span>
                           </div>
                         ))}
                       </div>
-                      <div className="p-4 bg-accent/10 rounded-xl border border-accent/20">
-                        <h4 className="font-bold text-accent mb-2">Expert Advice</h4>
-                        <p className="text-xs leading-relaxed">{result.advice}</p>
+                      <div className="p-8 bg-accent/5 rounded-[2rem] border border-accent/10 flex flex-col justify-center">
+                        <h4 className="font-black text-accent mb-4 tracking-widest uppercase text-xs">Protective Strategy</h4>
+                        <p className="text-sm leading-relaxed font-medium opacity-80">{result.advice}</p>
+                        <Button className="mt-8 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold">Download Full Evidence Report</Button>
                       </div>
                     </CardContent>
                   </Card>
