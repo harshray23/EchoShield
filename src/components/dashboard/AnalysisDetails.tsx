@@ -6,14 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  AlertTriangle, ShieldAlert, Heart, Share2, Skull, Play, Download, FileText,
-  Fingerprint, Search, Activity, Eye, Users, MessageSquare, Wallet, PhoneCall, ShieldX, Brain, Sparkles, AlertCircle
+  Heart, Share2, Skull, Play, FileText
 } from 'lucide-react';
 import { RiskMeter } from './RiskMeter';
 import { type AnalyzeScamOutput } from '@/ai/flows/analyze-scam-flow';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScamSimulator } from './ScamSimulator';
 
@@ -48,7 +46,6 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
   const [showGrandmaMode, setShowGrandmaMode] = useState(false);
   const [showSim, setShowSim] = useState(false);
   const [isDecoding, setIsDecoding] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     const timer = setTimeout(() => setIsDecoding(false), 2000);
@@ -63,41 +60,6 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
     'NUCLEAR ☠️': 'text-white bg-red-600 border-red-800 animate-pulse shadow-[0_0_40px_rgba(255,0,0,0.6)]',
   };
 
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    const timestamp = new Date().toLocaleString();
-    const caseNum = caseId?.toUpperCase() || 'TEMP-ID';
-
-    doc.setFillColor(5, 6, 15);
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(0, 183, 255);
-    doc.setFontSize(22);
-    doc.text('ECHOSHIELD NOVA REPORT', 20, 25);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
-    doc.text(`CASE ID: ${caseNum} | STAMP: ${timestamp}`, 20, 32);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(16);
-    doc.text(`VERDICT: ${result.trustLabel}`, 20, 55);
-    doc.text(`THREAT TYPE: ${result.scamType}`, 20, 65);
-
-    doc.setFontSize(12);
-    doc.text('Forensic Summary:', 20, 85);
-    const splitSummary = doc.splitTextToSize(result.summary, 170);
-    doc.text(splitSummary, 20, 95);
-
-    doc.text('Recommendations:', 20, 130);
-    (doc as any).autoTable({
-      startY: 135,
-      head: [['Step', 'Action']],
-      body: result.recommendations.map((r, i) => [i + 1, r]),
-      theme: 'grid',
-    });
-
-    doc.save(`EchoShield-Case-${caseNum.substring(0, 8)}.pdf`);
-  };
-
   return (
     <motion.div 
       variants={containerVariants}
@@ -105,7 +67,6 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
       animate="visible"
       className={`space-y-10 pb-24 ${showGrandmaMode ? 'max-w-4xl mx-auto' : ''}`}
     >
-      {/* CASE FILE HEADER */}
       <motion.div variants={itemVariants}>
         <Card className={`glass-card border-white/5 overflow-hidden rounded-[3rem] shadow-2xl ${result.riskLevel === 'nuclear' ? 'border-red-600/50 shadow-red-900/20' : ''}`}>
           <div className="scanline" />
@@ -149,33 +110,11 @@ export function AnalysisDetails({ result, audioUrl, caseId }: AnalysisDetailsPro
               </div>
               <div className="shrink-0 relative">
                 <RiskMeter score={result.riskScore} />
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
-                  className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-[10px] font-black tracking-[0.4em] uppercase text-primary animate-pulse"
-                >
-                  CALCULATING HEAT...
-                </motion.div>
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
-
-      {/* Forensic Intelligence Panels */}
-      <AnimatePresence>
-        {!showGrandmaMode && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-10"
-          >
-            {/* DNA, Triggers, etc panels stay same... */}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <Dialog open={showSim} onOpenChange={setShowSim}>
         <DialogContent className="max-w-3xl glass-card rounded-[3.5rem] p-0 border-white/5 overflow-hidden z-[101]">

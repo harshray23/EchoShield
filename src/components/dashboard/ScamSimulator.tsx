@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Ghost, Send, AlertTriangle, CheckCircle, ShieldAlert, Brain, Loader2, RefreshCw } from 'lucide-react';
+import { Ghost, Send, ShieldAlert, CheckCircle, Brain, Loader2, RefreshCw } from 'lucide-react';
 import { continueSimulation, type SimulationOutput } from '@/ai/flows/scam-simulator-flow';
 import { useToast } from '@/hooks/use-toast';
 

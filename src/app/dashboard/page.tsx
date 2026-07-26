@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  // STABILIZE REFERENCES: useMemo prevents the render loop
+  // STABILIZE REFERENCES: doc() must be memoized to prevent infinite re-renders
   const userRef = useMemo(() => {
     if (!user?.uid || !db) return null;
     return doc(db, 'users', user.uid);
@@ -40,7 +40,7 @@ export default function DashboardPage() {
 
   const { data: profile } = useDoc<UserProfile>(userRef as any);
 
-  // STABILIZE REFERENCES: query() must be memoized
+  // STABILIZE REFERENCES: query() must be memoized to prevent infinite re-renders
   const historyQuery = useMemo(() => {
     if (!user?.uid || !db) return null;
     return query(
