@@ -31,38 +31,22 @@ export default function AuthPage() {
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
 
-  // Handle redirect results and session persistence
+  // Handle successful login and redirection
   React.useEffect(() => {
-    if (authLoading || !auth) return;
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
-    const checkAuthStatus = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        const currentUser = result?.user || auth.currentUser;
-
-        if (currentUser) {
-          const db = getFirestore();
-          const userRef = doc(db, 'users', currentUser.uid);
-          
-          await setDoc(userRef, {
-            email: currentUser.email || 'guest@echoshield.ai',
-            name: currentUser.displayName || (currentUser.isAnonymous ? 'Guest Agent' : 'Agent'),
-            photo: currentUser.photoURL || '',
-            userId: currentUser.uid,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-          
-          router.push('/dashboard');
-        }
-      } catch (e: any) {
-        if (e.code === 'auth/unauthorized-domain') {
-          setUnauthorizedDomain(window.location.hostname);
-        }
+  // Handle redirect results for OAuth providers
+  React.useEffect(() => {
+    if (!auth) return;
+    getRedirectResult(auth).catch((e: any) => {
+      if (e.code === 'auth/unauthorized-domain') {
+        setUnauthorizedDomain(window.location.hostname);
       }
-    };
-
-    checkAuthStatus();
-  }, [auth, authLoading, router]);
+    });
+  }, [auth]);
 
   const onEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,8 +71,9 @@ export default function AuthPage() {
         email,
         userId: cred.user.uid,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+        updatedAt: serverTimestamp(),
+        safetyScore: 0
+      }, { merge: true });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Enrollment Failed", description: e.message });
       setLoading(false);
@@ -109,7 +94,15 @@ export default function AuthPage() {
   const onGuestLogin = async () => {
     setLoading(true);
     try {
-      await signInAnonymously(auth);
+      const cred = await signInAnonymously(auth);
+      const db = getFirestore();
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        email: 'guest@echoshield.ai',
+        userId: cred.user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        safetyScore: 0
+      }, { merge: true });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Ghost Link Failed", description: e.message });
       setLoading(false);
@@ -146,7 +139,7 @@ export default function AuthPage() {
                 The domain <code className="bg-white/10 px-1 rounded">{unauthorizedDomain}</code> must be authorized in your Firebase Console.
               </p>
               <Button size="sm" variant="destructive" className="w-full rounded-xl h-9 px-4 font-bold text-[10px] uppercase tracking-widest" asChild>
-                <a href={`https://console.firebase.google.com/project/firebase-explorer-3mnk1/authentication/settings`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://console.firebase.google.com/project/${auth.app.options.projectId}/authentication/settings`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-3 w-3" /> Fix in Firebase Console
                 </a>
               </Button>

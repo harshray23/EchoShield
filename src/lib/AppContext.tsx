@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useUser } from '@/firebase';
 
 type User = {
   name?: string;
@@ -24,10 +25,23 @@ type AppContextType = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { user: firebaseUser, loading: authLoading } = useUser();
   const [user, setUser] = useState<User | null>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [files, setFiles] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
+
+  // Sync with Firebase User
+  useEffect(() => {
+    if (firebaseUser) {
+      setUser({
+        name: firebaseUser.displayName || (firebaseUser.isAnonymous ? 'Guest Agent' : 'Agent'),
+        email: firebaseUser.email || 'guest@echoshield.ai'
+      });
+    } else {
+      setUser(null);
+    }
+  }, [firebaseUser]);
 
   const login = (userData: User) => {
     setUser(userData);
@@ -62,25 +76,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addLog = (message: string, iconType: string) => {
-    const { User, FileText, HardDrive, Trash2 } = require('lucide-react');
-    const icons: Record<string, any> = {
-      user: User,
-      "file-text": FileText,
-      "hard-drive": HardDrive,
-      "trash-2": Trash2,
-    };
-    const newLog = {
-      id: Date.now().toString(),
-      message,
-      timestamp: new Date(),
-      Icon: icons[iconType] || FileText
-    };
-    setLogs(prev => [newLog, ...prev].slice(0, 10));
+    // Lazy load icons to avoid SSR issues
+    import('lucide-react').then((icons) => {
+      const IconMap: Record<string, any> = {
+        user: icons.User,
+        "file-text": icons.FileText,
+        "hard-drive": icons.HardDrive,
+        "trash-2": icons.Trash2,
+      };
+      const newLog = {
+        id: Date.now().toString(),
+        message,
+        timestamp: new Date(),
+        Icon: IconMap[iconType] || icons.FileText
+      };
+      setLogs(prev => [newLog, ...prev].slice(0, 10));
+    });
   };
 
   const value = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user || !!firebaseUser,
     login,
     signup,
     logout,
