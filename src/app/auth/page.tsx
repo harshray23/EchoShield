@@ -123,7 +123,7 @@ export default function AuthPage() {
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="p-2 rounded-[2.5rem] bg-primary/5 border border-primary/10 cyber-glow">
-              <img src="/logo.jpg" alt="EchoShield AI Logo" className="h-36 w-36 object-contain rounded-[2.3rem] shadow-sm" />
+              <img src="/logo.png" alt="EchoShield AI Logo" className="h-36 w-36 object-contain rounded-[2.3rem]" />
             </div>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-white">Security Gateway</h1>

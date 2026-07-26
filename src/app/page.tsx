@@ -39,7 +39,7 @@ export default function LandingPage() {
               transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
               className="p-1 rounded-[3rem] bg-primary/5 border border-primary/10 cyber-glow"
             >
-              <img src="/logo.jpg" alt="EchoShield AI Logo" className="h-52 w-52 object-contain rounded-[2.9rem] shadow-sm" />
+              <img src="/logo.png" alt="EchoShield AI Logo" className="h-52 w-52 object-contain rounded-[2.9rem]" />
             </motion.div>
           </div>
           <h1 className="text-7xl font-black tracking-tighter sm:text-9xl neon-text mb-4 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/80 leading-none">

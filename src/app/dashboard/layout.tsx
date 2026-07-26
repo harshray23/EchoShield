@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <img src="/logo.jpg" alt="EchoShield AI Logo" className="h-12 w-12 object-contain rounded-xl animate-pulse" />
+          <img src="/logo.png" alt="EchoShield AI Logo" className="h-12 w-12 object-contain rounded-xl animate-pulse" />
           <p className="text-xs font-black tracking-widest uppercase text-muted-foreground">Synchronizing Link...</p>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar className="border-r border-white/5 bg-background/50 backdrop-blur-xl">
         <SidebarHeader className="p-6">
           <div className="flex items-center gap-3">
-            <img src="/logo.jpg" alt="EchoShield AI Logo" className="h-12 w-12 object-contain rounded-xl shadow-sm" />
+            <img src="/logo.png" alt="EchoShield AI Logo" className="h-12 w-12 object-contain rounded-xl" />
             <span className="text-xl font-black tracking-tighter">EchoShield</span>
           </div>
         </SidebarHeader>
