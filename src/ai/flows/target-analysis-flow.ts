@@ -42,7 +42,46 @@ const targetAnalysisPrompt = ai.definePrompt({
 });
 
 export async function analyzeTargetingPatterns(input: TargetAnalysisInput): Promise<TargetAnalysisOutput> {
-  const { output } = await targetAnalysisPrompt(input);
-  if (!output) throw new Error('Forensic link unstable');
-  return output;
+  const modelName = 'googleai/gemini-2.0-flash';
+  try {
+    const { output } = await targetAnalysisPrompt(input);
+    if (!output) throw new Error('Forensic link unstable: empty output returned from Gemini');
+    return output;
+  } catch (error: any) {
+    console.error('EchoShield AI Forensic Failure in analyzeTargetingPatterns:', {
+      exception: error.message || error,
+      stack: error.stack,
+      modelUsed: modelName,
+      historyCount: input.scamHistory?.length,
+    });
+    
+    // Local fallback for offline/quota limits
+    const history = input.scamHistory || [];
+    if (history.length === 0) {
+      return {
+        insight: 'Most scams targeting you are opportunistic generic outreach attempts broadcast in bulk to active numbers.',
+        dominantThreat: 'Bulk Phishing Broadcasts',
+        safetyRecommendation: 'Enable strict SMS filtering on your device and avoid replying to messages from unknown short-codes.'
+      };
+    }
+
+    const counts: Record<string, number> = {};
+    for (const item of history) {
+      counts[item.category] = (counts[item.category] || 0) + 1;
+    }
+    let dominant = Object.keys(counts)[0];
+    let max = counts[dominant];
+    for (const cat in counts) {
+      if (counts[cat] > max) {
+        dominant = cat;
+        max = counts[cat];
+      }
+    }
+
+    return {
+      insight: `Most scams targeting you are ${dominant || 'financial credential harvesting'} attacks, exploiting feelings of panic, urgency, or the fear of account blockages.`,
+      dominantThreat: dominant || 'Phishing Scams',
+      safetyRecommendation: 'Set up two-factor authentication (2FA) using an authenticator app and verify all alerts through official support lines.'
+    };
+  }
 }

@@ -1,3 +1,14 @@
+if (typeof globalThis !== 'undefined') {
+  try {
+    const g = globalThis as any;
+    if (g.localStorage && typeof g.localStorage.getItem !== 'function') {
+      delete g.localStorage;
+    }
+  } catch (e) {
+    // safe fallback
+  }
+}
+
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';

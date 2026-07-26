@@ -19,7 +19,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 relative overflow-hidden bg-[#05060f]">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 relative overflow-hidden bg-background">
       {/* Background Decoration */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
@@ -36,13 +36,13 @@ export default function LandingPage() {
           <div className="flex justify-center mb-6">
             <motion.div 
               animate={{ rotateY: 360 }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              className="p-4 rounded-[2.5rem] bg-primary/10 border border-primary/20 cyber-glow shadow-[0_0_50px_rgba(0,183,255,0.2)]"
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              className="p-1 rounded-[3rem] bg-primary/5 border border-primary/10 cyber-glow"
             >
-              <Shield className="h-20 w-20 text-primary" />
+              <img src="/logo.jpg" alt="EchoShield AI Logo" className="h-52 w-52 object-contain rounded-[2.9rem] shadow-sm" />
             </motion.div>
           </div>
-          <h1 className="text-7xl font-black tracking-tighter sm:text-9xl neon-text mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40 leading-none">
+          <h1 className="text-7xl font-black tracking-tighter sm:text-9xl neon-text mb-4 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/80 leading-none">
             EchoShield AI
           </h1>
           <p className="text-3xl font-black text-primary tracking-tighter uppercase italic">
@@ -56,7 +56,7 @@ export default function LandingPage() {
 
         {/* WOW Hero Interaction Simulation */}
         <div className="w-full max-w-2xl mt-16 p-1 bg-gradient-to-br from-primary/30 via-white/5 to-accent/30 rounded-[3rem] shadow-2xl relative">
-          <div className="bg-[#05060f] rounded-[2.9rem] p-8 md:p-12 h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="bg-card rounded-[2.9rem] p-8 md:p-12 h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
              <div className="scanline opacity-20" />
              
              <AnimatePresence mode="wait">
@@ -111,7 +111,7 @@ export default function LandingPage() {
               Analyze Now <ArrowRight className="ml-3 h-8 w-8" />
             </Link>
           </Button>
-          <Button size="lg" variant="outline" className="h-18 px-12 text-xl border-white/10 rounded-[2rem] bg-white/5 hover:bg-white/10 font-bold uppercase tracking-widest" asChild>
+          <Button size="lg" variant="outline" className="h-18 px-12 text-xl border-border rounded-[2rem] bg-card hover:bg-card/85 font-bold uppercase tracking-widest text-foreground" asChild>
             <Link href="/learn">Safety Academy</Link>
           </Button>
         </motion.div>
@@ -140,7 +140,7 @@ export default function LandingPage() {
       </section>
 
       {/* Trust Badges */}
-      <section className="max-w-6xl w-full border-t border-white/5 py-16 flex flex-wrap justify-center gap-16 opacity-40">
+      <section className="max-w-6xl w-full border-t border-border py-16 flex flex-wrap justify-center gap-16 opacity-40">
         <div className="flex items-center gap-3 font-black text-sm tracking-[0.3em]"><Lock className="h-5 w-5" /> SECURE VAULT</div>
         <div className="flex items-center gap-3 font-black text-sm tracking-[0.3em]"><CheckCircle className="h-5 w-5" /> GEMINI POWERED</div>
         <div className="flex items-center gap-3 font-black text-sm tracking-[0.3em]"><AlertTriangle className="h-5 w-5" /> FORENSIC GRADE</div>

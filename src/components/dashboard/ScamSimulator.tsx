@@ -51,7 +51,11 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
     }
   };
 
+  const initialMountRef = useRef<string | null>(null);
+
   useEffect(() => {
+    if (initialMountRef.current === scenario) return;
+    initialMountRef.current = scenario;
     startSim();
   }, [scenario]);
 

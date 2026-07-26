@@ -95,15 +95,53 @@ const simulatorFlow = ai.defineFlow(
     outputSchema: SimulationOutputSchema,
   },
   async (input) => {
-    try {
-      const { output } = await simulatorPrompt(input);
-      if (!output) {
-        throw new Error('Empty response from intelligence link.');
+    const modelName = 'googleai/gemini-2.0-flash';
+    const delays = [2000, 4000, 8000];
+    let attempt = 0;
+    
+    while (true) {
+      attempt++;
+      const startTime = Date.now();
+      try {
+        console.log(`[ScamSimulator] Executing model ${modelName} (Attempt ${attempt}/4)`);
+        const { output } = await simulatorPrompt(input);
+        const executionTime = Date.now() - startTime;
+        
+        if (!output) {
+          throw new Error('Empty response from intelligence link.');
+        }
+        
+        console.log(`[ScamSimulator] Success in ${executionTime}ms on attempt ${attempt}`);
+        return output;
+      } catch (error: any) {
+        const executionTime = Date.now() - startTime;
+        const isRateLimit = error.message?.includes('RESOURCE_EXHAUSTED') || 
+                            error.message?.includes('429') || 
+                            error.status === 429 || 
+                            error.code === 429;
+                            
+        console.error(`[ScamSimulator] Attempt ${attempt} failed in ${executionTime}ms:`, {
+          exception: error.message || error,
+          stack: error.stack,
+          modelUsed: modelName,
+          status: error.status || error.code || 'unknown',
+          retryCount: attempt - 1,
+        });
+
+        if (isRateLimit && attempt <= 3) {
+          const delay = delays[attempt - 1];
+          console.warn(`[ScamSimulator] Rate limit detected. Retrying in ${delay}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        // If quota is exceeded, return user-friendly error string
+        if (isRateLimit) {
+          throw new Error('AI services are temporarily unavailable. Please try again shortly.');
+        }
+
+        throw new Error(`Forensic Link Interrupted: ${error.message || 'Unknown Error'}`);
       }
-      return output;
-    } catch (error: any) {
-      console.error('Genkit Simulator Error:', error);
-      throw new Error(`Forensic Link Interrupted: ${error.message || 'Unknown Error'}`);
     }
   }
 );
@@ -112,5 +150,89 @@ const simulatorFlow = ai.defineFlow(
  * Server action to interact with the scam simulator.
  */
 export async function continueSimulation(input: SimulationInput): Promise<SimulationOutput> {
+  // If Gemini API Key is missing, run in Zero-Config local interactive Mock mode
+  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
+    const { scenario, history } = input;
+
+    // First turn: Initial message
+    if (history.length === 0) {
+      if (/kyc|bank|card|sbi|hdfc/i.test(scenario)) {
+        return {
+          message: 'SYSTEM ALERT: Your primary account has been temporarily locked due to suspicious activity. Please verify your identity immediately to prevent permanent suspension.',
+          reasoning: 'Initiating bank alert script.',
+          didVictimFallForIt: false,
+          isEnded: false,
+        };
+      }
+      if (/electricity|power|bill/i.test(scenario)) {
+        return {
+          message: 'DEAR CONSUMER: Your electricity connection will be disconnected tonight at 9:30 PM due to unpaid dues. Please contact our helpline officer immediately.',
+          reasoning: 'Initiating utility cut alert script.',
+          didVictimFallForIt: false,
+          isEnded: false,
+        };
+      }
+      if (/courier|customs|dhl|fedex/i.test(scenario)) {
+        return {
+          message: 'DHL Alert: Package #739281-IN has been held at customs. A processing fee is required. Reply with your details to release the shipment.',
+          reasoning: 'Initiating customs cargo hold script.',
+          didVictimFallForIt: false,
+          isEnded: false,
+        };
+      }
+      return {
+        message: `Hello, I am calling regarding your recent request for "${scenario}". We need to complete a verification process. Are you ready?`,
+        reasoning: 'Initiating generic confirmation prompt.',
+        didVictimFallForIt: false,
+        isEnded: false,
+      };
+    }
+
+    // Process user's last message
+    const lastUserMessage = history[history.length - 1].content.trim();
+
+    // Check if user complied with sensitive info (e.g. sent numbers or a code)
+    const hasNumbers = /\b\d{4,8}\b/.test(lastUserMessage) || /otp|code|password|pin/i.test(lastUserMessage);
+    if (hasNumbers) {
+      return {
+        message: 'Thank you, transaction verified.',
+        reasoning: 'Credentials captured, ending simulation.',
+        didVictimFallForIt: true,
+        isEnded: true,
+        educationalInsight: '🔴 Critical Failure: You shared a passcode/OTP or security token. Scammers use artificial urgency to panic you into revealing these credentials, which are used to bypass two-factor authentication.',
+      };
+    }
+
+    // Check if user called out the scam
+    const isSkeptical = /scam|fake|police|report|fraud|cyber|liar|stop|not sharing/i.test(lastUserMessage);
+    if (isSkeptical) {
+      return {
+        message: 'Fine, your account will be permanently blocked now.',
+        reasoning: 'Skepticism detected, exit play.',
+        didVictimFallForIt: false,
+        isEnded: true,
+        educationalInsight: '🟢 Threat Defused! You correctly identified the threat and refused to comply. Real representatives will never threaten immediate suspension or ask for security codes over chat.',
+      };
+    }
+
+    // High pressure response progression based on length of chat
+    const turnCount = history.filter((h) => h.role === 'user').length;
+    if (turnCount === 1) {
+      return {
+        message: 'Sir, this is a formal warning. Please click the secure link or send us the 6-digit verification code sent to your mobile device now to prevent legal action.',
+        reasoning: 'Escalating urgency pressure.',
+        didVictimFallForIt: false,
+        isEnded: false,
+      };
+    } else {
+      return {
+        message: 'This is our final attempt. If you do not send the verification code or complete the payment within the next 2 minutes, we will suspend all services and register a case.',
+        reasoning: 'Final warning before block.',
+        didVictimFallForIt: false,
+        isEnded: false,
+      };
+    }
+  }
+
   return simulatorFlow(input);
 }

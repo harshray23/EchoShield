@@ -77,3 +77,12 @@ export interface ScamAnalysis {
   targetReason?: string;
   simulationScenario: string;
 }
+
+export interface UserProfile {
+  userId: string;
+  safetyScore: number;
+  lastAnalysisAt?: any;
+  updatedAt?: any;
+  name?: string;
+  email?: string;
+}

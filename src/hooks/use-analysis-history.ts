@@ -20,7 +20,7 @@ export function useAnalysisHistory() {
     );
   }, [user?.uid, db]);
 
-  const { data: analyses, loading, error } = useCollection<ScamAnalysis>(historyQuery);
+  const { data: analyses, loading, error } = useCollection<ScamAnalysis>(historyQuery as any);
 
   return { analyses, loading, error };
 }

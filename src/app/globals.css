@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 230 50% 3%;
-    --foreground: 210 40% 98%;
-    --card: 230 45% 6%;
-    --card-foreground: 210 40% 98%;
-    --popover: 230 50% 3%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 199 100% 50%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 215 25% 27%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 25% 15%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 142 76% 55%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
+    --background: 36 100% 98.4%;      /* Cream White (#FFFCF8) */
+    --foreground: 267 9% 18%;         /* Dark Text (#2D2A32) */
+    --card: 41 32% 95%;               /* Warm Beige (#F7F3EC) */
+    --card-foreground: 267 9% 18%;
+    --popover: 36 100% 98.4%;
+    --popover-foreground: 267 9% 18%;
+    --primary: 256 100% 65%;          /* Primary Purple (#7C4DFF) */
+    --primary-foreground: 262 41% 98%;
+    --secondary: 262 41% 94%;         /* Soft Lavender (#EDE7F6) */
+    --secondary-foreground: 267 9% 18%;
+    --muted: 262 41% 94%;
+    --muted-foreground: 262 6% 48%;   /* Muted Text (#7A7483) */
+    --accent: 271 91% 65%;            /* Accent Purple (#C084FC) */
+    --accent-foreground: 262 41% 98%;
+    --destructive: 350 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 215 25% 15%;
-    --input: 215 25% 15%;
-    --ring: 199 100% 50%;
+    --border: 262 20% 88%;
+    --input: 262 20% 88%;
+    --ring: 256 100% 65%;
     --radius: 1.5rem;
   }
 }
@@ -33,51 +33,57 @@
   }
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
+    background-color: hsl(var(--background));
     background-image: 
-      radial-gradient(at 0% 0%, hsla(199, 100%, 50%, 0.12) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(142, 76%, 55%, 0.08) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, hsla(230, 50%, 10%, 1) 0px, transparent 100%);
+      /* Subtle floral dots (pointillism style) */
+      radial-gradient(circle, rgba(124, 77, 255, 0.04) 1.5px, transparent 1.5px),
+      radial-gradient(circle, rgba(168, 85, 247, 0.03) 2px, transparent 2px),
+      /* Delicate soft lavender and warm cream radial glow spots */
+      radial-gradient(at 0% 0%, hsla(256, 100%, 65%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(271, 91%, 65%, 0.04) 0px, transparent 50%);
+    background-size: 48px 48px, 72px 72px, 100% 100%, 100% 100%;
+    background-position: 0 0, 24px 24px, 0 0, 0 0;
   }
 }
 
 .glass-card {
-  @apply bg-card/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden;
+  @apply bg-card/65 backdrop-blur-xl border border-white/40 shadow-[0_12px_40px_rgba(124,77,255,0.03)] relative overflow-hidden transition-all duration-300 hover:shadow-[0_16px_48px_rgba(124,77,255,0.06)];
 }
 
 .glass-card::before {
   content: "";
-  @apply absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none;
+  @apply absolute inset-0 bg-gradient-to-br from-white/70 to-transparent pointer-events-none;
 }
 
 .cyber-glow {
-  box-shadow: 0 0 30px hsla(199, 100%, 50%, 0.3);
+  box-shadow: 0 0 32px hsla(256, 100%, 65%, 0.1);
 }
 
 .neon-text {
-  text-shadow: 0 0 15px hsla(199, 100%, 50%, 0.6);
+  text-shadow: 0 0 8px hsla(256, 100%, 65%, 0.12);
 }
 
 .btn-gradient {
-  @apply bg-gradient-to-r from-primary via-primary to-accent text-white font-black transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-primary/20;
+  @apply bg-gradient-to-r from-primary to-accent text-white font-semibold transition-all hover:opacity-90 active:scale-95 shadow-md shadow-primary/10 hover:shadow-lg hover:shadow-primary/15;
 }
 
 .nuclear-pulse {
-  animation: pulse-red 1s infinite alternate;
+  animation: pulse-red 1.5s infinite alternate;
 }
 
 @keyframes pulse-red {
-  from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
-  to { box-shadow: 0 0 40px rgba(255, 0, 0, 0.6); }
+  from { box-shadow: 0 0 10px rgba(124, 77, 255, 0.1); }
+  to { box-shadow: 0 0 30px rgba(124, 77, 255, 0.3); }
 }
 
 .scanline {
   width: 100%;
   height: 2px;
-  background: linear-gradient(to right, transparent, hsla(199, 100%, 50%, 0.5), transparent);
+  background: linear-gradient(to right, transparent, hsla(256, 100%, 65%, 0.15), transparent);
   position: absolute;
   top: 0;
   left: 0;
-  animation: scan 3s linear infinite;
+  animation: scan 8s linear infinite;
   z-index: 20;
   pointer-events: none;
 }
@@ -94,5 +100,5 @@
   @apply bg-background;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/5 rounded-full hover:bg-white/10;
+  @apply bg-primary/10 rounded-full hover:bg-primary/20;
 }

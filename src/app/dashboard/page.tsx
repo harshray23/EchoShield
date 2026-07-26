@@ -50,7 +50,7 @@ export default function DashboardPage() {
     );
   }, [user?.uid, db]);
 
-  const { data: recentAnalyses, error: analysesError } = useCollection<ScamAnalysis>(historyQuery);
+  const { data: recentAnalyses, error: analysesError } = useCollection<ScamAnalysis>(historyQuery as any);
 
   const indexLink = useMemo(() => {
     if (analysesError?.code === 'failed-precondition') {

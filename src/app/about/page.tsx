@@ -17,9 +17,9 @@ export default function AboutPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="inline-block p-4 rounded-3xl bg-primary/10 border border-primary/20 mb-4"
+          className="inline-block p-2 rounded-[2rem] bg-primary/5 border border-primary/10 mb-4"
         >
-          <Shield className="h-16 w-16 text-primary" />
+          <img src="/logo.jpg" alt="EchoShield AI Logo" className="h-32 w-32 object-contain rounded-[1.8rem] shadow-sm" />
         </motion.div>
         <h1 className="text-5xl font-black tracking-tight">Our Mission</h1>
         <p className="text-xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">

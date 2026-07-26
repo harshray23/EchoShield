@@ -20,7 +20,7 @@ export default function CaseDetailsPage({ params }: { params: Promise<{ id: stri
     return doc(db, 'analyses', id);
   }, [db, id]);
 
-  const { data: analysis, loading, error } = useDoc<ScamAnalysis>(docRef);
+  const { data: analysis, loading, error } = useDoc<ScamAnalysis>(docRef as any);
 
   if (loading) {
     return (

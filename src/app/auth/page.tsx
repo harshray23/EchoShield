@@ -122,8 +122,8 @@ export default function AuthPage() {
       <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="p-4 rounded-[2rem] bg-primary/10 border border-primary/20 cyber-glow">
-              <Fingerprint className="h-12 w-12 text-primary" />
+            <div className="p-2 rounded-[2.5rem] bg-primary/5 border border-primary/10 cyber-glow">
+              <img src="/logo.jpg" alt="EchoShield AI Logo" className="h-36 w-36 object-contain rounded-[2.3rem] shadow-sm" />
             </div>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-white">Security Gateway</h1>
