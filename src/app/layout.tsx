@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { AppProvider } from '@/lib/AppContext';
+import { InteractiveBackground } from '@/components/InteractiveBackground';
 
 export const metadata: Metadata = {
   title: 'EchoShield AI | Scam Detection',
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body className="min-h-screen font-sans antialiased">
         <FirebaseClientProvider>
           <AppProvider>
+            <InteractiveBackground />
             {children}
             <FirebaseErrorListener />
             <Toaster />

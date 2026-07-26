@@ -120,14 +120,14 @@ export default function AuthPage() {
       <div className="absolute inset-0 bg-primary/5 blur-[120px] pointer-events-none" />
       
       <div className="w-full max-w-md space-y-8 relative z-10">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 animate-fade-in">
           <div className="flex justify-center">
-            <div className="p-2 rounded-[2.5rem] bg-primary/5 border border-primary/10 cyber-glow">
-              <img src="/logo.png" alt="EchoShield AI Logo" className="h-36 w-36 object-contain rounded-[2.3rem]" />
+            <div className="p-2 rounded-[2.5rem] bg-card/65 border border-white/40 shadow-sm">
+              <img src="/logo.png" alt="EchoShield AI Logo" className="h-28 w-28 object-contain rounded-[2.3rem]" />
             </div>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-white">Security Gateway</h1>
-          <p className="text-muted-foreground font-medium">Authentication required to enter the console.</p>
+          <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Security Gateway</h1>
+          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.3em] opacity-80">Authentication required to enter console</p>
         </div>
 
         {unauthorizedDomain && (
@@ -154,7 +154,7 @@ export default function AuthPage() {
           </TabsList>
           
           <TabsContent value="login">
-            <Card className="glass-card border-white/5 rounded-[2rem]">
+            <Card className="glass-card border-white/40 shadow-xl rounded-[2.5rem]">
               <CardContent className="pt-8 space-y-6">
                 <form onSubmit={onEmailLogin} className="space-y-4">
                   <div className="space-y-2">
@@ -166,7 +166,7 @@ export default function AuthPage() {
                         placeholder="agent@echoshield.ai" 
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="h-12 pl-11 rounded-xl bg-white/5 border-white/10" 
+                        className="h-12 pl-11 rounded-xl bg-white/5 border-primary/20 focus:border-primary" 
                         required
                       />
                     </div>
@@ -180,30 +180,30 @@ export default function AuthPage() {
                         placeholder="••••••••" 
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        className="h-12 pl-11 rounded-xl bg-white/5 border-white/10" 
+                        className="h-12 pl-11 rounded-xl bg-white/5 border-primary/20 focus:border-primary" 
                         required
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full h-12 rounded-xl btn-gradient cyber-glow" disabled={loading}>
+                  <Button type="submit" className="w-full h-12 rounded-xl btn-gradient text-xs font-black uppercase tracking-widest" disabled={loading}>
                     {loading ? 'Establishing Link...' : 'ESTABLISH LINK'}
                   </Button>
                 </form>
                 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-white/10" />
+                    <span className="w-full border-t border-primary/10" />
                   </div>
                   <div className="relative flex justify-center text-[8px] uppercase">
-                    <span className="bg-[#05060f] px-2 text-muted-foreground font-black tracking-widest">Multi-Auth Protocols</span>
+                    <span className="bg-[#FAF8F5] px-2 text-muted-foreground font-black tracking-widest">Multi-Auth Protocols</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-white/5 font-bold flex gap-2 text-xs" onClick={onGoogleLogin}>
+                  <Button variant="outline" className="h-12 rounded-xl border-primary/10 bg-white/5 font-black uppercase tracking-widest text-[9px] flex gap-2" onClick={onGoogleLogin}>
                     <ShieldCheck className="h-4 w-4 text-primary" /> Google
                   </Button>
-                  <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-white/5 font-bold flex gap-2 text-xs" onClick={onGuestLogin} disabled={loading}>
+                  <Button variant="outline" className="h-12 rounded-xl border-primary/10 bg-white/5 font-black uppercase tracking-widest text-[9px] flex gap-2" onClick={onGuestLogin} disabled={loading}>
                     <Ghost className="h-4 w-4 text-accent" /> Ghost
                   </Button>
                 </div>
@@ -212,7 +212,7 @@ export default function AuthPage() {
           </TabsContent>
 
           <TabsContent value="signup">
-            <Card className="glass-card border-white/5 rounded-[2rem]">
+            <Card className="glass-card border-white/40 shadow-xl rounded-[2.5rem]">
               <CardContent className="pt-8 space-y-6">
                 <form onSubmit={onEmailSignup} className="space-y-4">
                   <div className="space-y-2">
@@ -222,7 +222,7 @@ export default function AuthPage() {
                       placeholder="agent@echoshield.ai" 
                       value={email}
                       onChange={e => setEmail(e.target.value)}
-                      className="h-12 rounded-xl bg-white/5 border-white/10" 
+                      className="h-12 rounded-xl bg-white/5 border-primary/20 focus:border-primary" 
                       required
                     />
                   </div>
@@ -233,11 +233,11 @@ export default function AuthPage() {
                       placeholder="••••••••" 
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="h-12 rounded-xl bg-white/5 border-white/10" 
+                      className="h-12 rounded-xl bg-white/5 border-primary/20 focus:border-primary" 
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full h-12 rounded-xl btn-gradient cyber-glow" disabled={loading}>
+                  <Button type="submit" className="w-full h-12 rounded-xl btn-gradient text-xs font-black uppercase tracking-widest" disabled={loading}>
                     {loading ? 'Encrypting...' : 'CREATE IDENTITY'}
                   </Button>
                 </form>

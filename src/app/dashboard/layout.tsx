@@ -1,14 +1,13 @@
-
 'use client';
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarFooter } from '@/components/ui/sidebar';
-import { LayoutDashboard, Shield, History, BookOpen, Settings, LogOut, Ghost, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, History, BookOpen, Settings, LogOut, Ghost, Menu } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -38,7 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <img src="/logo.png" alt="EchoShield AI Logo" className="h-12 w-12 object-contain rounded-xl animate-pulse" />
+          <img src="/logo.png" alt="EchoShield AI Logo" className="h-16 w-16 object-contain rounded-xl animate-pulse" />
           <p className="text-xs font-black tracking-widest uppercase text-muted-foreground">Synchronizing Link...</p>
         </div>
       </div>
@@ -48,77 +47,124 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) return null;
 
   return (
-    <SidebarProvider>
-      <Sidebar className="border-r border-white/5 bg-background/50 backdrop-blur-xl">
-        <SidebarHeader className="p-6">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="EchoShield AI Logo" className="h-12 w-12 object-contain rounded-xl" />
-            <span className="text-xl font-black tracking-tighter">EchoShield</span>
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row relative">
+      
+      {/* Premium Floating Left Sidebar for Desktop */}
+      <aside className="hidden md:flex flex-col w-72 h-[calc(100vh-32px)] fixed left-6 top-4 z-40 bg-card/65 backdrop-blur-xl border border-white/40 shadow-[0_12px_40px_rgba(124,77,255,0.02)] rounded-[2.5rem] p-6 justify-between transition-all duration-300 hover:shadow-[0_16px_48px_rgba(124,77,255,0.05)]">
+        <div className="space-y-10">
+          {/* Logo Brand Header */}
+          <div className="flex items-center gap-3 px-2">
+            <img src="/logo.png" alt="EchoShield AI Logo" className="h-9 w-9 object-contain rounded-lg shadow-sm" />
+            <span className="text-lg font-black tracking-tighter text-foreground uppercase">EchoShield</span>
           </div>
-        </SidebarHeader>
-        
-        <SidebarContent className="p-4">
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  onClick={() => router.push(item.href)}
-                  className="h-12 px-4 rounded-xl hover:bg-white/5 transition-all"
-                >
-                  <item.icon className={pathname === item.href ? 'text-primary' : ''} />
-                  <span className={`font-bold ${pathname === item.href ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {item.label}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
 
-        <SidebarFooter className="p-4 border-t border-white/5">
-          <div className="flex flex-col gap-3 p-3 bg-white/5 rounded-2xl">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src={user.photoURL || undefined} />
-                <AvatarFallback className="bg-primary/20 text-primary font-bold uppercase">
-                  {user.isAnonymous ? <Ghost className="h-5 w-5" /> : (user.displayName?.[0] || user.email?.[0] || 'U')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-bold truncate">
-                  {user.isAnonymous ? 'Guest Agent' : (user.displayName || user.email)}
-                </p>
-                <p className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">
-                  {user.isAnonymous ? 'Ephemeral Mode' : 'Verified Profile'}
-                </p>
+          {/* Navigation Items */}
+          <nav className="space-y-2">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => router.push(item.href)}
+                  className={`w-full flex items-center gap-4 h-12 px-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
+                    isActive 
+                      ? 'bg-primary text-white shadow-md shadow-primary/10' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  }`}
+                >
+                  <item.icon className="h-4.5 w-4.5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* User Profile Card & Actions */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+            <Avatar className="h-10 w-10 border border-primary/20">
+              <AvatarImage src={user.photoURL || undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary font-black uppercase text-xs">
+                {user.isAnonymous ? <Ghost className="h-4 w-4" /> : (user.displayName?.[0] || user.email?.[0] || 'U')}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-xs font-black text-foreground truncate">
+                {user.isAnonymous ? 'Guest Agent' : (user.displayName || user.email)}
+              </p>
+              <p className="text-[9px] font-black tracking-widest uppercase text-muted-foreground">
+                {user.isAnonymous ? 'Ephemeral Mode' : 'Verified Profile'}
+              </p>
+            </div>
+          </div>
+
+          <Button 
+            onClick={handleLogout} 
+            variant="outline" 
+            className="w-full rounded-2xl h-11 border-border bg-card/45 hover:bg-card text-[10px] font-black uppercase tracking-widest gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="h-3.5 w-3.5" /> Log Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* Mobile Top Header */}
+      <header className="md:hidden flex items-center justify-between px-6 py-4 bg-card/65 backdrop-blur-xl border-b border-border/40 sticky top-0 z-40 w-full">
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="EchoShield AI Logo" className="h-8 w-8 object-contain rounded-lg" />
+          <span className="text-sm font-black tracking-tighter uppercase">EchoShield</span>
+        </div>
+        
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-xl">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="bg-card/95 backdrop-blur-xl border-r border-border/40 p-6 flex flex-col justify-between">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="EchoShield AI Logo" className="h-9 w-9 object-contain rounded-lg" />
+                <span className="text-lg font-black tracking-tighter uppercase">EchoShield</span>
               </div>
+              <nav className="space-y-2">
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <button
+                      key={item.href}
+                      onClick={() => router.push(item.href)}
+                      className={`w-full flex items-center gap-4 h-12 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                        isActive 
+                          ? 'bg-primary text-white' 
+                          : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                      }`}
+                    >
+                      <item.icon className="h-4.5 w-4.5" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
             
-            {user.isAnonymous && (
-              <div className="px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded-lg flex items-center gap-2">
-                <ShieldAlert className="h-3 w-3 text-orange-500" />
-                <span className="text-[9px] font-bold text-orange-500 uppercase">Data will not persist</span>
-              </div>
-            )}
+            <div className="space-y-4">
+              <Button onClick={handleLogout} variant="outline" className="w-full rounded-xl h-11 text-xs font-black uppercase tracking-widest">
+                Log Out
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </header>
 
-            <button 
-              onClick={handleLogout} 
-              className="mt-2 w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest uppercase text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-            >
-              <LogOut className="h-3 w-3" /> Terminate Session
-            </button>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
+      {/* Main Content Area */}
+      <main className="flex-1 md:pl-[312px] p-6 md:p-10 min-h-screen relative z-10">
+        <div className="max-w-6xl mx-auto">
+          {children}
+        </div>
+      </main>
 
-      <SidebarInset className="bg-transparent">
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 px-6 md:hidden">
-          <SidebarTrigger />
-          <span className="text-lg font-black tracking-tighter">Console</span>
-        </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   );
 }

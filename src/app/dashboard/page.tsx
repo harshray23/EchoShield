@@ -139,23 +139,26 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-10">
-      <header className="flex flex-col md:flex-row items-center justify-between gap-8">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
-            <Fingerprint className="h-10 w-10 text-primary" />
+      <header className="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-primary/10 pb-8">
+        <div className="space-y-2 text-center md:text-left">
+          <div className="flex items-center justify-center md:justify-start gap-2.5">
+            <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+            <span className="text-[10px] font-black uppercase tracking-[0.35em] text-primary">SYSTEM: ACTIVE / FORENSICS DISPATCHED</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight uppercase">
             Guardian Console
           </h1>
-          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.4em] opacity-70">
-            Nova AI Protection // Forensic Safety Protocol
+          <p className="text-muted-foreground font-medium text-xs max-w-md">
+            EchoShield AI threat forensic triaging, network intelligence, and simulation logs.
           </p>
         </div>
         
         <div className="flex gap-4">
-          <div className="glass-card px-6 py-3 rounded-2xl flex items-center gap-4 border-primary/20">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary"><ShieldCheck className="h-5 w-5" /></div>
+          <div className="glass-card px-6 py-4 rounded-[2rem] flex items-center gap-4 border-white/40 shadow-sm">
+            <div className="p-3 bg-primary/10 rounded-2xl text-primary"><ShieldCheck className="h-6 w-6" /></div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Safety Score</span>
-              <span className="text-2xl font-black text-primary">{profile?.safetyScore || 0}</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Safety Index</span>
+              <span className="text-3xl font-black text-primary leading-none">{profile?.safetyScore || 0}</span>
             </div>
           </div>
         </div>
@@ -176,78 +179,79 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-        <div className="space-y-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2 space-y-8">
           <TriageCenter onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
-          
-          <div className="glass-card rounded-2xl p-6 border-white/5">
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary mb-4">
-                <Languages className="h-4 w-4" /> Regional Support
-             </div>
-             <div className="grid grid-cols-2 gap-2">
-               {['English', 'Hindi', 'Bengali', 'Tamil', 'Telugu', 'Marathi'].map(lang => (
-                 <button 
-                   key={lang}
-                   onClick={() => setLanguage(lang)}
-                   className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${language === lang ? 'bg-primary text-white shadow-lg' : 'bg-white/5 text-muted-foreground hover:bg-white/10'}`}
-                 >
-                   {lang}
-                 </button>
-               ))}
-             </div>
-          </div>
-        </div>
 
-        <div className="xl:col-span-3 space-y-8">
           <AnimatePresence mode="wait">
             {isAnalyzing ? (
               <AnalysisLoader key="loader" />
             ) : !result ? (
-              <div className="space-y-8">
-                {(isGeneratingInsight || targetInsight) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-8 glass-card border-primary/30 rounded-[3rem] relative overflow-hidden"
-                  >
-                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                      <div className="p-6 bg-primary/10 rounded-[2rem] border border-primary/20 cyber-glow shrink-0">
-                        <Activity className="h-12 w-12 text-primary" />
-                      </div>
-                      <div className="space-y-3 flex-1">
-                        <h4 className="text-xl font-black uppercase tracking-tighter text-primary">Nova's Targeting Analysis</h4>
-                        {isGeneratingInsight ? (
-                          <p className="text-sm text-muted-foreground animate-pulse font-medium">Analyzing patterns...</p>
-                        ) : (
-                          <div className="space-y-4">
-                            <p className="text-sm font-medium leading-relaxed italic text-white/90">
-                              "{targetInsight?.insight}"
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[400px]">
-                   <Card className="glass-card border-white/5 rounded-[3rem] p-8 overflow-hidden relative">
-                      <ScamMap />
-                   </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="glass-card border-white/40 shadow-sm rounded-[2.5rem] p-6 overflow-hidden relative min-h-[350px]">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-3">Live Risk Heatmap</div>
+                  <ScamMap />
+                </Card>
 
-                   <div className="flex flex-col items-center justify-center glass-card rounded-[3rem] p-12 text-center border-white/5">
-                    <ShieldAlert className="h-24 w-24 text-white/5 mb-4" />
-                    <h3 className="text-2xl font-bold uppercase tracking-tight">Nova is Listening</h3>
-                    <p className="text-muted-foreground max-w-sm mt-2 text-sm font-medium">
-                      Upload forensic evidence above to initiate protection.
-                    </p>
+                <div className="flex flex-col items-center justify-center glass-card rounded-[2.5rem] p-10 text-center border-white/40 shadow-sm min-h-[350px]">
+                  <div className="p-4 bg-primary/5 rounded-[2rem] border border-primary/10 mb-4 animate-bounce">
+                    <ShieldAlert className="h-10 w-10 text-primary" />
                   </div>
+                  <h3 className="text-xl font-black uppercase tracking-tight">System Listening</h3>
+                  <p className="text-muted-foreground max-w-xs mt-2 text-xs font-medium">
+                    Supply a screenshot, chat transcript, or voice sample to trace threats.
+                  </p>
                 </div>
               </div>
             ) : (
               <AnalysisDetails key="result" result={result} audioUrl={audioUrl} caseId={caseId} />
             )}
           </AnimatePresence>
+        </div>
+
+        <div className="space-y-8">
+          {(isGeneratingInsight || targetInsight) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 glass-card border-white/40 shadow-sm rounded-[2.5rem] relative overflow-hidden"
+            >
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary"><Activity className="h-4 w-4" /></div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">Intelligence Vector</span>
+                </div>
+                {isGeneratingInsight ? (
+                  <p className="text-xs text-muted-foreground animate-pulse font-medium">Processing signals...</p>
+                ) : (
+                  <p className="text-xs font-medium leading-relaxed italic text-foreground opacity-90">
+                    "{targetInsight?.insight}"
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          <div className="glass-card rounded-[2.5rem] p-6 border-white/40 shadow-sm">
+             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary mb-4">
+                <Languages className="h-4 w-4" /> Language Matrix
+             </div>
+             <div className="grid grid-cols-2 gap-2">
+               {['English', 'Hindi', 'Bengali', 'Tamil', 'Telugu', 'Marathi'].map(lang => (
+                 <button 
+                   key={lang}
+                   onClick={() => setLanguage(lang)}
+                   className={`px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${
+                     language === lang 
+                       ? 'bg-primary text-white shadow-md shadow-primary/10' 
+                       : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground'
+                   }`}
+                 >
+                   {lang}
+                 </button>
+               ))}
+             </div>
+          </div>
         </div>
       </div>
     </div>
