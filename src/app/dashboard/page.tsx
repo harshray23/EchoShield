@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  // STABILIZE REFERENCES: doc() must be memoized to prevent infinite re-renders
+  // STABILIZE REFERENCES: Memoize Firestore refs to prevent infinite render loops
   const userRef = useMemo(() => {
     if (!user?.uid || !db) return null;
     return doc(db, 'users', user.uid);
@@ -40,7 +40,6 @@ export default function DashboardPage() {
 
   const { data: profile } = useDoc<UserProfile>(userRef as any);
 
-  // STABILIZE REFERENCES: query() must be memoized to prevent infinite re-renders
   const historyQuery = useMemo(() => {
     if (!user?.uid || !db) return null;
     return query(
@@ -102,7 +101,7 @@ export default function DashboardPage() {
     }
     getInsight();
     return () => { isMounted = false; };
-  }, [recentAnalyses?.length, user?.uid, targetInsight, isGeneratingInsight]);
+  }, [recentAnalyses, user?.uid, targetInsight, isGeneratingInsight]);
 
   const handleAnalyze = async (type: 'text' | 'image' | 'voice' | 'document', content: string) => {
     if (!user) return;
@@ -124,7 +123,7 @@ export default function DashboardPage() {
 
         toast({
           title: 'Forensic Triage Complete',
-          description: `Nova identified a ${analysis.trustLabel} threat. Check the results.`,
+          description: `Nova identified a ${analysis.trustLabel} threat.`,
         });
       }, 1500);
 
@@ -167,10 +166,10 @@ export default function DashboardPage() {
           <AlertCircle className="h-5 w-5" />
           <AlertTitle className="font-black uppercase tracking-widest text-[10px]">Database Optimization Required</AlertTitle>
           <AlertDescription className="space-y-3 pt-2">
-            <p className="text-sm font-medium">To display your recent scan history, a composite index must be created in the Firebase Console.</p>
+            <p className="text-sm font-medium">To display history, a composite index must be created.</p>
             <Button size="sm" variant="destructive" className="rounded-xl h-9 px-4 font-bold text-[10px] uppercase tracking-widest" asChild>
               <a href={indexLink} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" /> Create Required Index
+                <ExternalLink className="mr-2 h-4 w-4" /> Create Index
               </a>
             </Button>
           </AlertDescription>
@@ -181,8 +180,8 @@ export default function DashboardPage() {
         <div className="space-y-8">
           <TriageCenter onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
           
-          <div className="glass-card rounded-[2rem] p-6 border-white/5 space-y-6">
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
+          <div className="glass-card rounded-2xl p-6 border-white/5">
+             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary mb-4">
                 <Languages className="h-4 w-4" /> Regional Support
              </div>
              <div className="grid grid-cols-2 gap-2">
@@ -197,51 +196,6 @@ export default function DashboardPage() {
                ))}
              </div>
           </div>
-
-          {exposureStats.length > 0 && (
-            <Card className="glass-card border-white/5 rounded-[2rem] p-6">
-              <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-6">
-                <Target className="h-4 w-4" /> Your Scam Exposure
-              </div>
-              <div className="space-y-4">
-                {exposureStats.slice(0, 5).map(stat => (
-                  <div key={stat.name} className="space-y-1.5">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
-                      <span className="text-muted-foreground truncate max-w-[120px]">{stat.name}</span>
-                      <span className="text-primary">{Math.round(stat.percent)}%</span>
-                    </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${stat.percent}%` }}
-                        className="h-full bg-primary shadow-[0_0_10px_rgba(0,183,255,0.3)]"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          <Card className="glass-card border-white/5 rounded-[2rem] p-6 bg-primary/5">
-             <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-4">
-                <TrendingUp className="h-4 w-4" /> Today's Trending Scams
-             </div>
-             <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-medium border-b border-white/5 pb-2">
-                   <span>🏦 RBI KYC Fraud</span>
-                   <span className="text-destructive font-black">HIGH</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-medium border-b border-white/5 pb-2">
-                   <span>📦 Courier Delay scam</span>
-                   <span className="text-orange-500 font-black">MED</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-medium">
-                   <span>🎓 Student Aid scam</span>
-                   <span className="text-accent font-black">NEW</span>
-                </div>
-             </div>
-          </Card>
         </div>
 
         <div className="xl:col-span-3 space-y-8">
@@ -256,9 +210,6 @@ export default function DashboardPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="p-8 glass-card border-primary/30 rounded-[3rem] relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 p-8 opacity-5">
-                      <Fingerprint className="h-32 w-32" />
-                    </div>
                     <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                       <div className="p-6 bg-primary/10 rounded-[2rem] border border-primary/20 cyber-glow shrink-0">
                         <Activity className="h-12 w-12 text-primary" />
@@ -266,69 +217,31 @@ export default function DashboardPage() {
                       <div className="space-y-3 flex-1">
                         <h4 className="text-xl font-black uppercase tracking-tighter text-primary">Nova's Targeting Analysis</h4>
                         {isGeneratingInsight ? (
-                          <p className="text-sm text-muted-foreground animate-pulse font-medium">Analyzing your forensic footprint for patterns...</p>
+                          <p className="text-sm text-muted-foreground animate-pulse font-medium">Analyzing patterns...</p>
                         ) : (
                           <div className="space-y-4">
                             <p className="text-sm font-medium leading-relaxed italic text-white/90">
                               "{targetInsight?.insight}"
                             </p>
-                            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                               <p className="text-[10px] font-black text-primary uppercase mb-1">Guardian Recommendation</p>
-                               <p className="text-xs font-bold text-white/80">{targetInsight?.safetyRecommendation}</p>
-                            </div>
                           </div>
                         )}
                       </div>
                     </div>
                   </motion.div>
                 )}
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[500px]">
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[400px]">
                    <Card className="glass-card border-white/5 rounded-[3rem] p-8 overflow-hidden relative">
-                      <div className="absolute inset-0 bg-primary/5 opacity-50 blur-3xl" />
                       <ScamMap />
                    </Card>
 
-                   <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex flex-col items-center justify-center glass-card rounded-[3rem] p-12 text-center border-white/5 relative overflow-hidden"
-                  >
-                    <Globe className="absolute h-96 w-96 text-primary/5 -right-20 -bottom-20 rotate-12" />
-                    <div className="relative mb-8">
-                      <ShieldAlert className="h-24 w-24 text-white/5" />
-                      <motion.div animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 flex items-center justify-center">
-                        <Fingerprint className="h-12 w-12 text-primary" />
-                      </motion.div>
-                    </div>
+                   <div className="flex flex-col items-center justify-center glass-card rounded-[3rem] p-12 text-center border-white/5">
+                    <ShieldAlert className="h-24 w-24 text-white/5 mb-4" />
                     <h3 className="text-2xl font-bold uppercase tracking-tight">Nova is Listening</h3>
                     <p className="text-muted-foreground max-w-sm mt-2 text-sm font-medium">
-                      Upload forensic evidence above to initiate the Nova Guardian Protocol.
+                      Upload forensic evidence above to initiate protection.
                     </p>
-                  </motion.div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   <Card className="glass-card border-white/5 rounded-[2.5rem] p-8">
-                      <h4 className="text-lg font-black uppercase tracking-tighter mb-4 text-primary">Cyber Safety Coach</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        "Welcome back. Remember: Scammers love creating urgency. If a message asks you to act in under 5 minutes, it's 99% a scam. Take a breath, and let Nova check it first."
-                      </p>
-                   </Card>
-                   <Card className="glass-card border-white/5 rounded-[2.5rem] p-8 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-10"><Zap className="h-24 w-24 text-accent" /></div>
-                      <h4 className="text-lg font-black uppercase tracking-tighter mb-4 text-accent">Active Defense Protocol</h4>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Real-time Phishing Detection Active</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Regional Geo-Triage Shield Enabled</span>
-                        </div>
-                      </div>
-                   </Card>
+                  </div>
                 </div>
               </div>
             ) : (

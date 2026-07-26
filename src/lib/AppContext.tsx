@@ -31,67 +31,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
 
-  // Sync with Firebase User
+  // Robust Sync with Firebase User
   useEffect(() => {
     if (firebaseUser) {
       setUser({
         name: firebaseUser.displayName || (firebaseUser.isAnonymous ? 'Guest Agent' : 'Agent'),
         email: firebaseUser.email || 'guest@echoshield.ai'
       });
-    } else {
+    } else if (!authLoading) {
       setUser(null);
     }
-  }, [firebaseUser]);
+  }, [firebaseUser, authLoading]);
 
   const login = (userData: User) => {
     setUser(userData);
-    addLog("User logged in", "user");
   };
 
   const signup = (userData: User) => {
     setUser(userData);
-    addLog("User signed up", "user");
   };
 
   const logout = () => {
     setUser(null);
-    addLog("User logged out", "user");
   };
 
   const addDocument = (name: string, data: any) => {
     const newDoc = { id: Date.now().toString(), name, data, createdAt: new Date() };
     setDocuments([...documents, newDoc]);
-    addLog(`Document added: ${name}`, "file-text");
   };
 
   const deleteDocument = (id: string) => {
     setDocuments(documents.filter(doc => doc.id !== id));
-    addLog("Document deleted", "trash-2");
   };
 
   const addFile = (file: any) => {
     const newFile = { ...file, id: Date.now().toString(), uploadedAt: new Date() };
     setFiles([...files, newFile]);
-    addLog(`File uploaded: ${file.name}`, "hard-drive");
-  };
-
-  const addLog = (message: string, iconType: string) => {
-    // Lazy load icons to avoid SSR issues
-    import('lucide-react').then((icons) => {
-      const IconMap: Record<string, any> = {
-        user: icons.User,
-        "file-text": icons.FileText,
-        "hard-drive": icons.HardDrive,
-        "trash-2": icons.Trash2,
-      };
-      const newLog = {
-        id: Date.now().toString(),
-        message,
-        timestamp: new Date(),
-        Icon: IconMap[iconType] || icons.FileText
-      };
-      setLogs(prev => [newLog, ...prev].slice(0, 10));
-    });
   };
 
   const value = {

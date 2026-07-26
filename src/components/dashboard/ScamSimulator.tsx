@@ -39,10 +39,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
       const res = await continueSimulation({ scenario, history: [] });
       setMessages([{ role: 'model', content: res.message }]);
     } catch (e: any) {
-      const errorMsg = e.message?.includes('429') 
-        ? 'Neural Link Congested: The AI is busy. Please wait 15 seconds and retry.' 
-        : (e.message || 'Nova could not establish the adversary connection.');
-      
+      const errorMsg = e.message || 'Nova could not establish the adversary connection.';
       setError(errorMsg);
       toast({ 
         variant: 'destructive', 
@@ -101,7 +98,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
             <div className="p-2 bg-primary/10 rounded-xl text-primary"><Ghost className="h-5 w-5" /></div>
             <div className="flex-1">
               <CardTitle className="text-lg font-black uppercase tracking-tighter">Live Scam Simulation</CardTitle>
-              <CardDescription className="text-[10px] font-black tracking-widest uppercase">Safe Forensic Environment</CardDescription>
+              <CardDescription className="text-[10px] font-black tracking-widest uppercase">Safe Forensic Training Environment</CardDescription>
             </div>
             {isEnded && (
               <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${result?.didVictimFallForIt ? 'bg-destructive/20 text-destructive' : 'bg-accent/20 text-accent'}`}>
@@ -169,7 +166,7 @@ export function ScamSimulator({ scenario }: ScamSimulatorProps) {
                   </h4>
                 </div>
                 <p className="text-sm font-medium leading-relaxed italic opacity-90">
-                  {result.educationalInsight || (result.didVictimFallForIt ? "The simulation has ended because sensitive information was exposed. In a real scenario, your assets would now be at risk." : "Great work. You maintained your guard and identified the manipulation cues.")}
+                  {result.educationalInsight || (result.didVictimFallForIt ? "The simulation has ended because sensitive information was exposed." : "Great work. You maintained your guard.")}
                 </p>
                 <Button onClick={startSim} variant="outline" className="w-full rounded-xl border-white/10 font-black uppercase text-[10px] tracking-widest h-12">Initialize New Protocol</Button>
               </motion.div>

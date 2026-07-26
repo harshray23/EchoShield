@@ -145,8 +145,8 @@ export default function LearnPage() {
             <div className="flex items-center gap-4">
               <div className="p-3 bg-primary/20 rounded-2xl text-primary">{activeModule?.icon}</div>
               <div>
-                <DialogTitle className="text-3xl font-black tracking-tighter uppercase">{activeModule?.title || 'Loading Protocol...'}</DialogTitle>
-                <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70">{activeModule?.difficulty || 'Standard'} Defense Protocol</DialogDescription>
+                <DialogTitle className="text-3xl font-black tracking-tighter uppercase">{activeModule?.title || 'Defense Protocol'}</DialogTitle>
+                <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70">{activeModule?.difficulty || 'Standard'} Cyber Security Defense Level</DialogDescription>
               </div>
             </div>
             {activeModule && (
